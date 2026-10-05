@@ -52,6 +52,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -81,6 +82,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import cz.pavlik.timetracker.models.TimeFilter
 import cz.pavlik.timetracker.models.TimeRecord
 import cz.pavlik.timetracker.ui.utils.BorderDark
+import cz.pavlik.timetracker.ui.utils.DayGroupBackground
 import cz.pavlik.timetracker.ui.utils.PrimaryEmerald
 import cz.pavlik.timetracker.ui.utils.StopRed
 import cz.pavlik.timetracker.ui.utils.SurfaceDark
@@ -434,7 +436,7 @@ import kotlinx.datetime.toLocalDateTime
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(top = 10.dp, bottom = 2.dp, start = 4.dp, end = 4.dp),
+            .padding(top = 8.dp, bottom = 2.dp, start = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -453,7 +455,7 @@ import kotlinx.datetime.toLocalDateTime
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 13.sp,
-                    color = TextPrimary,
+                    color = TextPrimary.copy(alpha = 0.8f),
                 ),
             )
         }
@@ -494,28 +496,41 @@ import kotlinx.datetime.toLocalDateTime
             records.groupBy { it.timestamp.toLocalDateTime(timeZone).date }
         }
 
-        LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             grouped.forEach { (date, dayRecords) ->
                 val dayTotalSeconds = dayRecords.sumOf { it.durationSeconds }
 
-                item(key = "header_${date}") {
-                    DayHeader(
-                        date = date,
-                        nowDate = nowLdt.date,
-                        dailyTotalSeconds = dayTotalSeconds
-                    )
-                }
+                // Celý den je jeden vizuální blok, aby bylo na první pohled jasné, které záznamy k sobě patří.
+                item(key = "day_${date}") {
+                    Column(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(DayGroupBackground)
+                            .border(1.dp, BorderDark, RoundedCornerShape(14.dp))
+                            .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 10.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        DayHeader(
+                            date = date,
+                            nowDate = nowLdt.date,
+                            dailyTotalSeconds = dayTotalSeconds
+                        )
 
-                items(dayRecords, key = { it.id }) { record ->
-                    RecordItemCard(
-                        record = record,
-                        onStartAgain = { onStartAgain(record) },
-                        onCopyRecord = { onCopyRecord(record) },
-                        onDelete = { onDelete(record) },
-                        onUpdateRecord = { name, start, duration ->
-                            onUpdateRecord(record.id, name, start, duration)
-                        },
-                    )
+                        dayRecords.forEach { record ->
+                            key(record.id) {
+                                RecordItemCard(
+                                    record = record,
+                                    onStartAgain = { onStartAgain(record) },
+                                    onCopyRecord = { onCopyRecord(record) },
+                                    onDelete = { onDelete(record) },
+                                    onUpdateRecord = { name, start, duration ->
+                                        onUpdateRecord(record.id, name, start, duration)
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
