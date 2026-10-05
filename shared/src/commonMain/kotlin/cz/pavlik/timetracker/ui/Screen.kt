@@ -31,6 +31,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.ContentCopy
@@ -112,6 +113,7 @@ import kotlinx.datetime.toLocalDateTime
 @Composable private fun TimeTrackerScreen(viewModel: TimeTrackerViewModel = viewModel()) {
     val state by viewModel.uiState.collectAsState()
     var showExportDialog by remember { mutableStateOf(false) }
+    var showStatsDialog by remember { mutableStateOf(false) }
     var recordToDelete by remember { mutableStateOf<TimeRecord?>(null) }
 
     Box(Modifier.fillMaxSize()) {
@@ -138,7 +140,8 @@ import kotlinx.datetime.toLocalDateTime
                     onFilterSelect = viewModel::onFilterSelected,
                     onFromChange = viewModel::onCustomFromChange,
                     onToChange = viewModel::onCustomToChange,
-                    onOpenExportDialog = { showExportDialog = true }
+                    onOpenExportDialog = { showExportDialog = true },
+                    onOpenStatsDialog = { showStatsDialog = true },
                 )
 
                 RecordList(
@@ -154,6 +157,13 @@ import kotlinx.datetime.toLocalDateTime
                 ExportCsvDialog(
                     onDismiss = { showExportDialog = false },
                     onExport = viewModel::exportMonthlyCsv,
+                )
+            }
+
+            if (showStatsDialog) {
+                MonthlyStatsDialog(
+                    records = state.records,
+                    onDismiss = { showStatsDialog = false },
                 )
             }
 
@@ -314,6 +324,7 @@ import kotlinx.datetime.toLocalDateTime
     onFromChange: (String) -> Unit,
     onToChange: (String) -> Unit,
     onOpenExportDialog: () -> Unit,
+    onOpenStatsDialog: () -> Unit,
 ) {
     Surface(
         Modifier.fillMaxWidth(),
@@ -339,6 +350,18 @@ import kotlinx.datetime.toLocalDateTime
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                    OutlinedButton(
+                        onClick = onOpenStatsDialog,
+                        shape = RoundedCornerShape(10.dp),
+                        border = BorderStroke(1.dp, BorderDark),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) { Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Rounded.BarChart, contentDescription = "Měsíční přehled", Modifier.size(16.dp), tint = PrimaryEmerald)
+                        Spacer(Modifier.width(6.dp))
+                        Text("Přehled", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    } }
+
                     OutlinedButton(
                         onClick = onOpenExportDialog,
                         shape = RoundedCornerShape(10.dp),

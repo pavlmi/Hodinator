@@ -61,6 +61,57 @@ object TimeUtils {
         else -> ""
     }
 
+    fun dayOfWeekShortName(date: LocalDate): String = dayOfWeekName(date).take(2)
+
+    fun isWeekend(date: LocalDate): Boolean =
+        date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+
+    fun monthName(monthNumber: Int): String = when (monthNumber) {
+        1 -> "Leden"
+        2 -> "Únor"
+        3 -> "Březen"
+        4 -> "Duben"
+        5 -> "Květen"
+        6 -> "Červen"
+        7 -> "Červenec"
+        8 -> "Srpen"
+        9 -> "Září"
+        10 -> "Říjen"
+        11 -> "Listopad"
+        12 -> "Prosinec"
+        else -> ""
+    }
+
+    /** Např. "7 h 32 min", "45 min", "0 h". */
+    fun formatHoursMinutes(totalSeconds: Long): String {
+        val hours = totalSeconds / 3600
+        val minutes = (totalSeconds % 3600) / 60
+        return when {
+            hours > 0 && minutes > 0 -> "$hours h $minutes min"
+            hours > 0 -> "$hours h"
+            minutes > 0 -> "$minutes min"
+            else -> "0 h"
+        }
+    }
+
+    /** Odpracované sekundy pro každý den daného měsíce (včetně dnů bez záznamu). Záznam se počítá ke dni svého začátku. */
+    fun dailyTotalsForMonth(
+        records: List<TimeRecord>,
+        year: Int,
+        monthNumber: Int,
+        timeZone: TimeZone = TimeZone.currentSystemDefault()
+    ): List<Pair<LocalDate, Long>> {
+        val firstDay = LocalDate(year, monthNumber, 1)
+        val nextMonthFirstDay = if (monthNumber == 12) LocalDate(year + 1, 1, 1) else LocalDate(year, monthNumber + 1, 1)
+        val days = (firstDay.toEpochDays() until nextMonthFirstDay.toEpochDays()).map { LocalDate.fromEpochDays(it) }
+
+        val totalsByDate = records
+            .groupBy { it.timestamp.toLocalDateTime(timeZone).date }
+            .mapValues { (_, dayRecords) -> dayRecords.sumOf { it.durationSeconds } }
+
+        return days.map { it to (totalsByDate[it] ?: 0L) }
+    }
+
     fun formatTime(
         instant: Instant,
         timeZone: TimeZone = TimeZone.currentSystemDefault()
