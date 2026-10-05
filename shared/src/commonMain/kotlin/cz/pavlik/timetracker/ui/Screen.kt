@@ -58,7 +58,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -534,6 +541,46 @@ import kotlinx.datetime.toLocalDateTime
     var startText by remember(record) { mutableStateOf(TimeUtils.formatTime(startLdt)) }
     var endText by remember(record) { mutableStateOf(TimeUtils.formatTime(endLdt)) }
 
+    fun resetTexts() {
+        nameText = record.projectName
+        dateText = TimeUtils.formatDate(record.timestamp, timeZone)
+        startText = TimeUtils.formatTime(startLdt)
+        endText = TimeUtils.formatTime(endLdt)
+    }
+
+    fun commitChanges() {
+        val parsedDate = TimeUtils.parseDate(dateText)
+        val parsedStart = TimeUtils.parseTime(startText)
+        val parsedEnd = TimeUtils.parseTime(endText)
+        if (parsedDate == null || parsedStart == null || parsedEnd == null) {
+            resetTexts()
+            return
+        }
+
+        val dayShift = parsedDate.toEpochDays() - startLdt.date.toEpochDays()
+        val endDate = LocalDate.fromEpochDays(endLdt.date.toEpochDays() + dayShift)
+
+        val newStartInstant = LocalDateTime(
+            parsedDate.year, parsedDate.monthNumber, parsedDate.dayOfMonth,
+            parsedStart.first, parsedStart.second, startLdt.second, startLdt.nanosecond
+        ).toInstant(timeZone)
+        val newEndInstant = LocalDateTime(
+            endDate.year, endDate.monthNumber, endDate.dayOfMonth,
+            parsedEnd.first, parsedEnd.second, endLdt.second, endLdt.nanosecond
+        ).toInstant(timeZone)
+
+        val newDuration = newEndInstant.epochSeconds - newStartInstant.epochSeconds
+        if (newDuration <= 0) {
+            resetTexts()
+            return
+        }
+
+        val unchanged = nameText == record.projectName &&
+            newStartInstant == record.timestamp &&
+            newDuration == record.durationSeconds
+        if (!unchanged) onUpdateRecord(nameText, newStartInstant, newDuration)
+    }
+
     Surface(
         Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -547,10 +594,8 @@ import kotlinx.datetime.toLocalDateTime
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 InlineEditableInput(
                     value = nameText,
-                    onValueChange = { newName ->
-                        nameText = newName
-                        onUpdateRecord(newName, record.timestamp, record.durationSeconds)
-                    },
+                    onValueChange = { nameText = it },
+                    onCommit = ::commitChanges,
                     textStyle = TextStyle(
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary,
@@ -562,23 +607,8 @@ import kotlinx.datetime.toLocalDateTime
 
                 InlineEditableInput(
                     value = dateText,
-                    onValueChange = { newDateStr ->
-                        dateText = newDateStr
-                        val parsedDate = TimeUtils.parseDate(newDateStr)
-                        if (parsedDate != null) {
-                            val newLdt = LocalDateTime(
-                                parsedDate.year,
-                                parsedDate.monthNumber,
-                                parsedDate.dayOfMonth,
-                                startLdt.hour,
-                                startLdt.minute,
-                                startLdt.second,
-                                startLdt.nanosecond
-                            )
-                            val newInstant = newLdt.toInstant(timeZone)
-                            onUpdateRecord(nameText, newInstant, record.durationSeconds)
-                        }
-                    },
+                    onValueChange = { dateText = it },
+                    onCommit = ::commitChanges,
                     textStyle = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         color = TextSecondary,
@@ -595,45 +625,11 @@ import kotlinx.datetime.toLocalDateTime
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                CleanTimeInput(
-                    value = startText,
-                    onValueChange = { newValue ->
-                        startText = newValue
-                        val parsed = TimeUtils.parseTime(newValue)
-                        if (parsed != null) {
-                            val (h, m) = parsed
-                            val newStartLdt = LocalDateTime(
-                                startLdt.year, startLdt.monthNumber, startLdt.dayOfMonth,
-                                h, m, startLdt.second, startLdt.nanosecond
-                            )
-                            val newStartInstant = newStartLdt.toInstant(timeZone)
-
-                            val newDuration = endInstant.epochSeconds - newStartInstant.epochSeconds
-                            if (newDuration > 0) onUpdateRecord(nameText, newStartInstant, newDuration)
-                        }
-                    }
-                )
+                CleanTimeInput(value = startText, onValueChange = { startText = it }, onCommit = ::commitChanges)
 
                 Text("→", color = TextSecondary, fontSize = 18.sp)
 
-                CleanTimeInput(
-                    value = endText,
-                    onValueChange = { newValue ->
-                        endText = newValue
-                        val parsed = TimeUtils.parseTime(newValue)
-                        if (parsed != null) {
-                            val (h, m) = parsed
-                            val newEndLdt = LocalDateTime(
-                                endLdt.year, endLdt.monthNumber, endLdt.dayOfMonth,
-                                h, m, endLdt.second, endLdt.nanosecond
-                            )
-                            val newEndInstant = newEndLdt.toInstant(timeZone)
-
-                            val newDuration = newEndInstant.epochSeconds - record.timestamp.epochSeconds
-                            if (newDuration > 0) onUpdateRecord(nameText, record.timestamp, newDuration)
-                        }
-                    }
-                )
+                CleanTimeInput(value = endText, onValueChange = { endText = it }, onCommit = ::commitChanges)
             }
             Spacer(Modifier.width(16.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -666,6 +662,7 @@ import kotlinx.datetime.toLocalDateTime
 @Composable private fun InlineEditableInput(
     value: String,
     onValueChange: (String) -> Unit,
+    onCommit: () -> Unit,
     textStyle: TextStyle,
     placeholder: String = "",
     width: Modifier = Modifier,
@@ -673,6 +670,7 @@ import kotlinx.datetime.toLocalDateTime
     val interactionSource = remember { MutableInteractionSource() }
     val isHovered by interactionSource.collectIsHoveredAsState()
     var isFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
 
     val showHighlight = isHovered || isFocused
 
@@ -685,7 +683,11 @@ import kotlinx.datetime.toLocalDateTime
         modifier = width
             .hoverable(interactionSource)
             .pointerHoverIcon(PointerIcon.Text)
-            .onFocusChanged { isFocused = it.isFocused },
+            .clearFocusOnEnter(focusManager)
+            .onFocusChanged {
+                if (isFocused && !it.isFocused) onCommit()
+                isFocused = it.isFocused
+            },
         decorationBox = { innerTextField ->
             Box(
                 Modifier
@@ -708,11 +710,20 @@ import kotlinx.datetime.toLocalDateTime
     )
 }
 
-@Composable private fun CleanTimeInput(value: String, onValueChange: (String) -> Unit) {
+@Composable private fun CleanTimeInput(value: String, onValueChange: (String) -> Unit, onCommit: () -> Unit) {
+    var isFocused by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         singleLine = true,
+        modifier = Modifier
+            .clearFocusOnEnter(focusManager)
+            .onFocusChanged {
+                if (isFocused && !it.isFocused) onCommit()
+                isFocused = it.isFocused
+            },
         textStyle = TextStyle(
             fontFamily = FontFamily.Monospace,
             color = TextPrimary,
@@ -732,6 +743,13 @@ import kotlinx.datetime.toLocalDateTime
             ) { innerTextField() }
         }
     )
+}
+
+private fun Modifier.clearFocusOnEnter(focusManager: FocusManager): Modifier = onPreviewKeyEvent { event ->
+    if (event.type == KeyEventType.KeyDown && (event.key == Key.Enter || event.key == Key.NumPadEnter)) {
+        focusManager.clearFocus()
+        true
+    } else false
 }
 
 @Composable private fun ExportCsvDialog(onDismiss: () -> Unit, onExport: (year: Int, monthNumber: Int) -> Unit) {
