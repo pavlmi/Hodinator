@@ -1,6 +1,6 @@
 package cz.hodinator.data
 
-import cz.hodinator.models.NO_PROJECT_NAME
+import cz.hodinator.models.normalizeProjectName
 import cz.hodinator.models.TimeRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,7 +33,8 @@ class DatabaseManager(dbFile: File) {
                             add(
                                 TimeRecord(
                                     id = rs.getLong("id"),
-                                    projectName = rs.getString("project_name"),
+                                    // Also normalized on read, so older records with line breaks display and export cleanly.
+                                    projectName = normalizeProjectName(rs.getString("project_name")),
                                     durationSeconds = rs.getLong("duration_seconds"),
                                     startTime = Instant.parse(rs.getString("timestamp")),
                                 )
@@ -73,7 +74,7 @@ class DatabaseManager(dbFile: File) {
     }
 
     private fun PreparedStatement.bindRecord(record: TimeRecord) {
-        setString(1, record.projectName.trim().ifBlank { NO_PROJECT_NAME })
+        setString(1, normalizeProjectName(record.projectName))
         setLong(2, record.durationSeconds)
         setString(3, record.startTime.toString())
     }

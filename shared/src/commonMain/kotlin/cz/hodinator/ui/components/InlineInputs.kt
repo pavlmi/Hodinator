@@ -126,7 +126,7 @@ import cz.hodinator.ui.theme.TextSecondary
 
     BasicTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = { onValueChange(it.withoutLineBreaks()) },
         singleLine = true,
         textStyle = textStyle,
         cursorBrush = SolidColor(PrimaryEmerald),

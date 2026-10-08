@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.hodinator.ui.components.SectionCard
 import cz.hodinator.ui.components.appTextFieldColors
+import cz.hodinator.ui.components.withoutLineBreaks
 import cz.hodinator.ui.theme.PrimaryEmerald
 import cz.hodinator.ui.theme.StopRed
 import cz.hodinator.ui.theme.TextPrimary
@@ -57,7 +58,7 @@ import cz.hodinator.utils.TimeUtils
         ) {
             OutlinedTextField(
                 value = projectName,
-                onValueChange = onProjectNameChange,
+                onValueChange = { onProjectNameChange(it.withoutLineBreaks()) },
                 placeholder = {
                     Text("Na čem právě pracuješ?", color = TextSecondary, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 },

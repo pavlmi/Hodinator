@@ -44,6 +44,9 @@ import cz.hodinator.ui.theme.SurfaceVariantDark
 import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
 
+/** Single-line text fields don't strip line breaks from pasted text, so replace them with spaces. */
+fun String.withoutLineBreaks(): String = replace(Regex("[\r\n]+"), " ")
+
 /** Background with the border used by all "cards" in the app. */
 fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.dp)): Modifier =
     clip(shape).background(color).border(1.dp, BorderDark, shape)

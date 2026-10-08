@@ -1,7 +1,9 @@
 package cz.hodinator
 
+import cz.hodinator.models.NO_PROJECT_NAME
 import cz.hodinator.models.TimeFilter
 import cz.hodinator.models.TimeRecord
+import cz.hodinator.models.normalizeProjectName
 import cz.hodinator.utils.TimeUtils
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
@@ -86,5 +88,10 @@ class TimeUtilsTest {
         assertEquals(5400L, totals.single { it.first.dayOfMonth == 3 }.second)
         assertEquals(60L, totals.last().second)
         assertEquals(5460L, totals.sumOf { it.second })
+    }
+
+    @Test fun normalizesProjectNames() {
+        assertEquals("A B C", normalizeProjectName("  A\n\nB \t C\r\n"))
+        assertEquals(NO_PROJECT_NAME, normalizeProjectName(" \n "))
     }
 }

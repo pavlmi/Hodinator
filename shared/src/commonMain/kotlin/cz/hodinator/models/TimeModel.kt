@@ -7,6 +7,14 @@ import kotlin.time.Duration.Companion.seconds
 /** Name used to store records whose project name was left blank. */
 const val NO_PROJECT_NAME = "Bez projektu"
 
+private val WHITESPACE = Regex("\\s+")
+
+/**
+ * Collapses all whitespace, including line breaks from text pasted e.g. from Jira, into single spaces,
+ * so a project name is always one line. Blank names become [NO_PROJECT_NAME].
+ */
+fun normalizeProjectName(name: String): String = name.trim().replace(WHITESPACE, " ").ifBlank { NO_PROJECT_NAME }
+
 data class TimeRecord(
     val id: Long = 0,
     val projectName: String,
