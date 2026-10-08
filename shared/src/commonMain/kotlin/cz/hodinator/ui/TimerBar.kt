@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cz.hodinator.ui.components.SectionCard
@@ -57,7 +58,9 @@ import cz.hodinator.utils.TimeUtils
             OutlinedTextField(
                 value = projectName,
                 onValueChange = onProjectNameChange,
-                placeholder = { Text("Na čem právě pracuješ?", color = TextSecondary, fontSize = 14.sp) },
+                placeholder = {
+                    Text("Na čem právě pracuješ?", color = TextSecondary, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                },
                 modifier = Modifier.weight(1f),
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
@@ -69,6 +72,7 @@ import cz.hodinator.utils.TimeUtils
                 if (isRunning) Box(Modifier.size(8.dp).clip(CircleShape).background(StopRed))
                 Text(
                     text = TimeUtils.formatSeconds(elapsedSeconds),
+                    softWrap = false,
                     style = TextStyle(
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
@@ -91,7 +95,7 @@ import cz.hodinator.utils.TimeUtils
                     modifier = Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(6.dp))
-                Text(if (isRunning) "STOP" else "START", style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp))
+                Text(if (isRunning) "STOP" else "START", softWrap = false, style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp))
             }
         }
     }

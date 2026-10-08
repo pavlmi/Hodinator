@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -128,18 +129,21 @@ import kotlinx.datetime.toLocalDateTime
     Row(
         Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 2.dp, start = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.size(6.dp).clip(CircleShape).background(PrimaryEmerald))
             Text(
                 title,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary.copy(alpha = 0.8f)),
             )
         }
 
         Text(
             "Denní celkem: ${TimeUtils.formatSeconds(dayTotalSeconds)}",
+            softWrap = false,
             style = TextStyle(
                 fontFamily = FontFamily.Monospace,
                 fontSize = 12.sp,
@@ -232,6 +236,7 @@ import kotlinx.datetime.toLocalDateTime
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 TimeUtils.formatSeconds(record.durationSeconds),
+                softWrap = false,
                 style = TextStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp),
             )
             RecordAction(Icons.Rounded.PlayArrow, "Spustit znovu", PrimaryEmerald, iconSize = 25.dp, onClick = onStartAgain)

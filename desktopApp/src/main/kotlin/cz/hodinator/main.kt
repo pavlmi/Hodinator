@@ -1,5 +1,6 @@
 package cz.hodinator
 
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -10,6 +11,7 @@ import cz.hodinator.ui.App
 import cz.hodinator.ui.TimeTrackerViewModel
 import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
+import java.awt.Dimension
 
 fun main() {
     AppLog.info("App started, database: ${AppFiles.databaseFile.absolutePath}")
@@ -28,6 +30,10 @@ fun main() {
                 }
                 exitApplication()
             },
-        ) { App(viewModel) }
+        ) {
+            // Below this size the layout no longer fits, so don't let the window shrink further.
+            LaunchedEffect(Unit) { window.minimumSize = Dimension(720, 480) }
+            App(viewModel)
+        }
     }
 }

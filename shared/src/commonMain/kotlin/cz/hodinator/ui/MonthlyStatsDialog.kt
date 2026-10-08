@@ -49,6 +49,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -62,11 +63,11 @@ import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
 import cz.hodinator.ui.theme.TooltipBackground
 import cz.hodinator.utils.TimeUtils
+import kotlin.math.ceil
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import kotlin.math.ceil
 
 private val ChartHeight = 220.dp
 private val YAxisWidth = 36.dp
@@ -169,12 +170,18 @@ private val TooltipHeight = 46.dp
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(label.uppercase(), style = TextStyle(color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold))
+        Text(
+            label.uppercase(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = TextStyle(color = TextSecondary, fontSize = 10.sp, fontWeight = FontWeight.Bold),
+        )
         Text(
             value,
+            softWrap = false,
             style = TextStyle(fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary),
         )
-        Text(caption ?: "", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+        Text(caption ?: "", maxLines = 1, overflow = TextOverflow.Ellipsis, style = TextStyle(color = TextSecondary, fontSize = 11.sp))
     }
 }
 
