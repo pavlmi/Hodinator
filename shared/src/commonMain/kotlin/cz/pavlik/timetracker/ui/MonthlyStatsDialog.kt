@@ -54,12 +54,13 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.ui.utils.BorderDark
-import cz.pavlik.timetracker.ui.utils.PrimaryEmerald
-import cz.pavlik.timetracker.ui.utils.SurfaceDark
-import cz.pavlik.timetracker.ui.utils.SurfaceVariantDark
-import cz.pavlik.timetracker.ui.utils.TextPrimary
-import cz.pavlik.timetracker.ui.utils.TextSecondary
+import cz.pavlik.timetracker.ui.theme.BorderDark
+import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
+import cz.pavlik.timetracker.ui.theme.SurfaceDark
+import cz.pavlik.timetracker.ui.theme.SurfaceVariantDark
+import cz.pavlik.timetracker.ui.theme.TextPrimary
+import cz.pavlik.timetracker.ui.theme.TextSecondary
+import cz.pavlik.timetracker.ui.theme.TooltipBackground
 import cz.pavlik.timetracker.utils.TimeUtils
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
@@ -138,7 +139,7 @@ private val TooltipHeight = 46.dp
                     StatTile(
                         "Nejdelší den",
                         longestDay?.let { TimeUtils.formatHoursMinutes(it.second) } ?: "–",
-                        longestDay?.let { "${TimeUtils.dayOfWeekName(it.first)} ${TimeUtils.formatDate(it.first)}" },
+                        longestDay?.let { TimeUtils.dayWithDate(it.first) },
                         Modifier.weight(1f),
                     )
                 }
@@ -285,12 +286,12 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                             .width(TooltipWidth)
                             .height(TooltipHeight)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(Color(0xFF0B0D11))
+                            .background(TooltipBackground)
                             .padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalArrangement = Arrangement.Center,
                     ) {
                         Text(
-                            "${TimeUtils.dayOfWeekName(date)} ${TimeUtils.formatDate(date)}",
+                            TimeUtils.dayWithDate(date),
                             style = TextStyle(color = TextSecondary, fontSize = 11.sp),
                         )
                         Text(

@@ -3,83 +3,33 @@ package cz.pavlik.timetracker.utils
 import cz.pavlik.timetracker.models.TimeFilter
 import cz.pavlik.timetracker.models.TimeRecord
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.isoDayNumber
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
-import kotlin.collections.iterator
 
+/** Formátování a parsování časů v českém formátu (datum `dd.MM.yyyy`, čas `HH:mm`) a výpočty nad záznamy. */
 object TimeUtils {
 
+    private val DAY_NAMES = listOf("Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle")
+
+    private val MONTH_NAMES = listOf(
+        "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
+        "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
+    )
+
+    /** Např. "07:32:05". */
     fun formatSeconds(totalSeconds: Long): String {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
         val seconds = totalSeconds % 60
         return "%02d:%02d:%02d".format(hours, minutes, seconds)
-    }
-
-    fun formatDateTime(
-        instant: Instant,
-        timeZone: TimeZone = TimeZone.currentSystemDefault()
-    ): String {
-        val ldt = instant.toLocalDateTime(timeZone)
-        return "%02d.%02d.%04d %02d:%02d".format(
-            ldt.dayOfMonth,
-            ldt.monthNumber,
-            ldt.year,
-            ldt.hour,
-            ldt.minute
-        )
-    }
-
-    fun formatDate(
-        instant: Instant,
-        timeZone: TimeZone = TimeZone.currentSystemDefault()
-    ): String {
-        val ldt = instant.toLocalDateTime(timeZone)
-        return "%02d.%02d.%04d".format(
-            ldt.dayOfMonth,
-            ldt.monthNumber,
-            ldt.year
-        )
-    }
-
-    fun formatDate(date: LocalDate): String {
-        return "%02d.%02d.%04d".format(date.dayOfMonth, date.monthNumber, date.year)
-    }
-
-    fun dayOfWeekName(date: LocalDate): String = when (date.dayOfWeek) {
-        DayOfWeek.MONDAY -> "Pondělí"
-        DayOfWeek.TUESDAY -> "Úterý"
-        DayOfWeek.WEDNESDAY -> "Středa"
-        DayOfWeek.THURSDAY -> "Čtvrtek"
-        DayOfWeek.FRIDAY -> "Pátek"
-        DayOfWeek.SATURDAY -> "Sobota"
-        DayOfWeek.SUNDAY -> "Neděle"
-        else -> ""
-    }
-
-    fun dayOfWeekShortName(date: LocalDate): String = dayOfWeekName(date).take(2)
-
-    fun isWeekend(date: LocalDate): Boolean =
-        date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
-
-    fun monthName(monthNumber: Int): String = when (monthNumber) {
-        1 -> "Leden"
-        2 -> "Únor"
-        3 -> "Březen"
-        4 -> "Duben"
-        5 -> "Květen"
-        6 -> "Červen"
-        7 -> "Červenec"
-        8 -> "Srpen"
-        9 -> "Září"
-        10 -> "Říjen"
-        11 -> "Listopad"
-        12 -> "Prosinec"
-        else -> ""
     }
 
     /** Např. "7 h 32 min", "45 min", "0 h". */
@@ -94,63 +44,35 @@ object TimeUtils {
         }
     }
 
-    /** Odpracované sekundy pro každý den daného měsíce (včetně dnů bez záznamu). Záznam se počítá ke dni svého začátku. */
-    fun dailyTotalsForMonth(
-        records: List<TimeRecord>,
-        year: Int,
-        monthNumber: Int,
-        timeZone: TimeZone = TimeZone.currentSystemDefault()
-    ): List<Pair<LocalDate, Long>> {
-        val firstDay = LocalDate(year, monthNumber, 1)
-        val nextMonthFirstDay = if (monthNumber == 12) LocalDate(year + 1, 1, 1) else LocalDate(year, monthNumber + 1, 1)
-        val days = (firstDay.toEpochDays() until nextMonthFirstDay.toEpochDays()).map { LocalDate.fromEpochDays(it) }
+    fun formatDate(date: LocalDate): String = "%02d.%02d.%04d".format(date.dayOfMonth, date.monthNumber, date.year)
 
-        val totalsByDate = records
-            .groupBy { it.timestamp.toLocalDateTime(timeZone).date }
-            .mapValues { (_, dayRecords) -> dayRecords.sumOf { it.durationSeconds } }
+    fun formatTime(time: LocalTime): String = "%02d:%02d".format(time.hour, time.minute)
 
-        return days.map { it to (totalsByDate[it] ?: 0L) }
+    fun dayOfWeekName(date: LocalDate): String = DAY_NAMES[date.dayOfWeek.isoDayNumber - 1]
+
+    fun dayOfWeekShortName(date: LocalDate): String = dayOfWeekName(date).take(2)
+
+    /** Např. "Pondělí 05.10.2026". */
+    fun dayWithDate(date: LocalDate): String = "${dayOfWeekName(date)} ${formatDate(date)}"
+
+    fun isWeekend(date: LocalDate): Boolean = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
+
+    fun monthName(monthNumber: Int): String = MONTH_NAMES[monthNumber - 1]
+
+    /** Parsuje "d.M.yyyy" (s úvodními nulami i bez). Neplatné datum vrací `null`. */
+    fun parseDate(text: String): LocalDate? {
+        val parts = text.trim().split(".").map { it.trim().toIntOrNull() ?: return null }
+        if (parts.size != 3) return null
+        val (day, month, year) = parts
+        return runCatching { LocalDate(year, month, day) }.getOrNull()
     }
 
-    fun formatTime(
-        instant: Instant,
-        timeZone: TimeZone = TimeZone.currentSystemDefault()
-    ): String {
-        val ldt = instant.toLocalDateTime(timeZone)
-        return "%02d:%02d".format(ldt.hour, ldt.minute)
-    }
-
-    fun formatTime(ldt: LocalDateTime): String {
-        return "%02d:%02d".format(ldt.hour, ldt.minute)
-    }
-
-    fun parseTime(timeStr: String): Pair<Int, Int>? {
-        return try {
-            val parts = timeStr.trim().split(":")
-            if (parts.size == 2) {
-                val hour = parts[0].toInt()
-                val minute = parts[1].toInt()
-                if (hour in 0..23 && minute in 0..59) {
-                    Pair(hour, minute)
-                } else null
-            } else null
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    fun parseDate(dateStr: String): LocalDate? {
-        return try {
-            val parts = dateStr.trim().split(".")
-            if (parts.size == 3) {
-                val day = parts[0].padStart(2, '0').toInt()
-                val month = parts[1].padStart(2, '0').toInt()
-                val year = parts[2].toInt()
-                LocalDate(year, month, day)
-            } else null
-        } catch (_: Exception) {
-            null
-        }
+    /** Parsuje "H:mm". Neplatný čas vrací `null`. */
+    fun parseTime(text: String): LocalTime? {
+        val parts = text.trim().split(":").map { it.trim().toIntOrNull() ?: return null }
+        if (parts.size != 2) return null
+        val (hour, minute) = parts
+        return runCatching { LocalTime(hour, minute) }.getOrNull()
     }
 
     fun filterRecords(
@@ -159,62 +81,53 @@ object TimeUtils {
         now: Instant = Clock.System.now(),
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
         fromDate: LocalDate? = null,
-        toDate: LocalDate? = null
+        toDate: LocalDate? = null,
     ): List<TimeRecord> {
-        val nowLdt = now.toLocalDateTime(timeZone)
+        if (filter == TimeFilter.ALL) return records
+
+        val today = now.toLocalDateTime(timeZone).date
+        val lastMonth = today.minus(1, DateTimeUnit.MONTH)
 
         return records.filter { record ->
-            val recordLdt = record.timestamp.toLocalDateTime(timeZone)
+            val date = record.startTime.toLocalDateTime(timeZone).date
             when (filter) {
                 TimeFilter.ALL -> true
-                TimeFilter.TODAY -> {
-                    recordLdt.date == nowLdt.date
-                }
-                TimeFilter.THIS_MONTH -> {
-                    recordLdt.year == nowLdt.year && recordLdt.month == nowLdt.month
-                }
-                TimeFilter.LAST_MONTH -> {
-                    val (targetYear, targetMonthNumber) = if (nowLdt.monthNumber == 1) {
-                        Pair(nowLdt.year - 1, 12)
-                    } else {
-                        Pair(nowLdt.year, nowLdt.monthNumber - 1)
-                    }
-                    recordLdt.year == targetYear && recordLdt.monthNumber == targetMonthNumber
-                }
-                TimeFilter.CUSTOM -> {
-                    val recordDate = recordLdt.date
-                    val afterFrom = fromDate == null || recordDate >= fromDate
-                    val beforeTo = toDate == null || recordDate <= toDate
-                    afterFrom && beforeTo
-                }
+                TimeFilter.TODAY -> date == today
+                TimeFilter.THIS_MONTH -> date.isInMonthOf(today)
+                TimeFilter.LAST_MONTH -> date.isInMonthOf(lastMonth)
+                TimeFilter.CUSTOM -> (fromDate == null || date >= fromDate) && (toDate == null || date <= toDate)
             }
         }
     }
 
-    fun generateMonthlyCsv(
+    /** Záznamy začínající v daném měsíci. */
+    fun recordsInMonth(
         records: List<TimeRecord>,
         year: Int,
         monthNumber: Int,
-        timeZone: TimeZone = TimeZone.currentSystemDefault()
-    ): String {
-        val filtered = records.filter { record ->
-            val ldt = record.timestamp.toLocalDateTime(timeZone)
-            ldt.year == year && ldt.monthNumber == monthNumber
-        }
-
-        val grouped = filtered.groupBy { it.projectName }
-
-        val sb = StringBuilder()
-        sb.append("\uFEFF") // UTF-8 BOM
-        sb.append("Název úkolu;Celkový čas\n")
-
-        for ((projectName, projRecords) in grouped) {
-            val totalSeconds = projRecords.sumOf { it.durationSeconds }
-            val formattedTime = formatSeconds(totalSeconds)
-            val cleanProjectName = projectName.replace(";", ",")
-            sb.append("$cleanProjectName;$formattedTime\n")
-        }
-
-        return sb.toString()
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    ): List<TimeRecord> = records.filter {
+        val date = it.startTime.toLocalDateTime(timeZone).date
+        date.year == year && date.monthNumber == monthNumber
     }
+
+    /** Odpracované sekundy pro každý den daného měsíce (včetně dnů bez záznamu). Záznam se počítá ke dni svého začátku. */
+    fun dailyTotalsForMonth(
+        records: List<TimeRecord>,
+        year: Int,
+        monthNumber: Int,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    ): List<Pair<LocalDate, Long>> {
+        val totalsByDate = recordsInMonth(records, year, monthNumber, timeZone)
+            .groupBy { it.startTime.toLocalDateTime(timeZone).date }
+            .mapValues { (_, dayRecords) -> dayRecords.sumOf { it.durationSeconds } }
+
+        val firstDay = LocalDate(year, monthNumber, 1)
+        return generateSequence(firstDay) { it.plus(1, DateTimeUnit.DAY) }
+            .takeWhile { it.monthNumber == monthNumber }
+            .map { it to (totalsByDate[it] ?: 0L) }
+            .toList()
+    }
+
+    private fun LocalDate.isInMonthOf(other: LocalDate) = year == other.year && month == other.month
 }

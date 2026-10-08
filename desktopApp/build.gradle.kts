@@ -8,15 +8,8 @@ plugins {
 
 dependencies {
     implementation(project(":shared"))
-
     implementation(compose.desktop.currentOs)
     implementation(libs.kotlinx.coroutinesSwing)
-    implementation(libs.kotlinx.datetime)
-    runtimeOnly("org.jetbrains.kotlinx:kotlinx-datetime-jvm:0.6.2")
-    implementation(libs.sqlite.jdbc)
-    implementation(libs.koin.core)
-
-    implementation(libs.compose.uiToolingPreview)
 }
 
 compose.desktop {
@@ -26,9 +19,11 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Pkg)
 
-            packageName = "cz.pavlik.timetracker"
+            packageName = "Hodinator"
             packageVersion = "1.0.0"
+            description = "Jednoduché měření času stráveného na projektech"
 
+            // Balený runtime obsahuje jen vyjmenované moduly JDK; JDBC (SQLite) potřebuje java.sql.
             modules("java.sql")
 
             macOS {
