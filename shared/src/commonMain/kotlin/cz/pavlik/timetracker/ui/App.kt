@@ -86,6 +86,7 @@ import cz.pavlik.timetracker.ui.theme.TextSecondary
 
             RecordList(
                 records = state.filteredRecords,
+                scrollToTopRequest = state.scrollToTopRequest,
                 onStartAgain = viewModel::startAgain,
                 onCopy = viewModel::copyRecord,
                 onDelete = { recordToDelete = it },

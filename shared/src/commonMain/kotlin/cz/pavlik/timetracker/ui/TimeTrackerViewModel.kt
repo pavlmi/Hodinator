@@ -46,7 +46,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         if (_uiState.value.isRunning) {
             launchDbAction("Záznam se nepodařilo uložit") {
                 saveRunningTimer()
-                reloadRecords()
+                reloadRecords(scrollToTop = true)
             }
         } else {
             startTimer(_uiState.value.projectName)
@@ -57,7 +57,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
     fun startAgain(record: TimeRecord) = launchDbAction("Záznam se nepodařilo uložit") {
         if (_uiState.value.isRunning) {
             saveRunningTimer()
-            reloadRecords()
+            reloadRecords(scrollToTop = true)
         }
         startTimer(record.projectName)
     }
@@ -139,9 +139,15 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         }
     }
 
-    private suspend fun reloadRecords() {
+    /** Reloads all records; with [scrollToTop] the list scrolls to the top, where a newly tracked record appears. */
+    private suspend fun reloadRecords(scrollToTop: Boolean = false) {
         val records = db.getRecords()
-        _uiState.update { it.copy(records = records) }
+        _uiState.update {
+            it.copy(
+                records = records,
+                scrollToTopRequest = if (scrollToTop) it.scrollToTopRequest + 1 else it.scrollToTopRequest,
+            )
+        }
     }
 
     private fun showToast(message: String, isError: Boolean = false) {
@@ -179,6 +185,11 @@ data class TimeTrackerState(
     val elapsedSeconds: Long = 0L,
     val projectName: String = "",
     val toast: Toast? = null,
+    /**
+     * Incremented whenever the record list should scroll to the top. Kept in the state (rather than sent as
+     * a one-off event) so it arrives together with the new records and the list scrolls after showing them.
+     */
+    val scrollToTopRequest: Int = 0,
 ) {
     val isRunning: Boolean get() = startTime != null
 

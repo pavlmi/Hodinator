@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -21,6 +22,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -62,11 +64,17 @@ import kotlinx.datetime.toLocalDateTime
 
 @Composable fun RecordList(
     records: List<TimeRecord>,
+    scrollToTopRequest: Int,
     onStartAgain: (TimeRecord) -> Unit,
     onCopy: (TimeRecord) -> Unit,
     onDelete: (TimeRecord) -> Unit,
     onUpdate: (TimeRecord) -> Unit,
 ) {
+    val listState = rememberLazyListState()
+    LaunchedEffect(scrollToTopRequest) {
+        if (scrollToTopRequest > 0) listState.animateScrollToItem(0)
+    }
+
     if (records.isEmpty()) {
         Box(Modifier.fillMaxSize().cardBackground(SurfaceDark), contentAlignment = Alignment.Center) {
             Text("Žádné záznamy k zobrazení", color = TextSecondary, fontSize = 14.sp)
@@ -79,7 +87,7 @@ import kotlinx.datetime.toLocalDateTime
     // Recomputed whenever records change, so "Dnes"/"Včera" stay correct when the app runs past midnight.
     val today = remember(records) { Clock.System.now().toLocalDateTime(timeZone).date }
 
-    LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    LazyColumn(Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         recordsByDay.forEach { (date, dayRecords) ->
             // Each day is one visual block so it's obvious at a glance which records belong together.
             item(key = date.toString()) {
