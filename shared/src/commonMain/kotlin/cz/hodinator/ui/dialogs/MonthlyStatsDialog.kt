@@ -1,4 +1,4 @@
-package cz.hodinator.ui
+package cz.hodinator.ui.dialogs
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas

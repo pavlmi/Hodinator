@@ -1,4 +1,4 @@
-package cz.hodinator.ui
+package cz.hodinator.ui.dialogs
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Download
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -31,14 +28,12 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cz.hodinator.models.TimeRecord
 import cz.hodinator.ui.components.AppDialog
 import cz.hodinator.ui.components.DialogButtons
 import cz.hodinator.ui.components.DialogText
 import cz.hodinator.ui.components.DialogTitle
 import cz.hodinator.ui.components.SelectablePill
 import cz.hodinator.ui.theme.PrimaryEmerald
-import cz.hodinator.ui.theme.StopRed
 import cz.hodinator.ui.theme.SurfaceVariantDark
 import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
@@ -49,6 +44,7 @@ import kotlinx.datetime.toLocalDateTime
 
 
 private val LabelStyle = TextStyle(fontSize = 12.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
+
 @Composable fun ExportCsvDialog(onDismiss: () -> Unit, onExport: (year: Int, monthNumber: Int) -> Unit) {
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
     var selectedYear by remember { mutableStateOf(today.year) }
@@ -109,25 +105,4 @@ private val LabelStyle = TextStyle(fontSize = 12.sp, color = TextSecondary, font
         Modifier.size(32.dp).clip(RoundedCornerShape(6.dp)).background(SurfaceVariantDark).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Text(label, color = TextPrimary, fontWeight = FontWeight.Bold) }
-}
-
-@Composable fun DeleteConfirmDialog(record: TimeRecord, onDismiss: () -> Unit, onConfirmDelete: () -> Unit) {
-    AppDialog(onDismiss = onDismiss, width = 400.dp) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Box(
-                Modifier.size(36.dp).clip(CircleShape).background(StopRed.copy(alpha = 0.15f)),
-                contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Delete, contentDescription = null, Modifier.size(20.dp), tint = StopRed) }
-            DialogTitle("Smazat záznam")
-        }
-
-        DialogText("Opravdu chcete smazat záznam \"${record.projectName}\"? Tato akce je nevratná.")
-
-        DialogButtons(
-            confirmLabel = "Smazat",
-            confirmColor = StopRed,
-            onDismiss = onDismiss,
-            onConfirm = onConfirmDelete,
-        )
-    }
 }

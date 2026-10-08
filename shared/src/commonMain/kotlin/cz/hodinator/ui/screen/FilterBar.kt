@@ -1,4 +1,4 @@
-package cz.hodinator.ui
+package cz.hodinator.ui.screen
 
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement

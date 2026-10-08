@@ -1,4 +1,4 @@
-package cz.hodinator.ui
+package cz.hodinator.ui.dialogs
 
 import java.awt.FileDialog
 import java.awt.Frame

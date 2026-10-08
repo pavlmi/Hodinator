@@ -49,5 +49,5 @@ Záloha = zkopírovat soubor `time_tracker.db`.
 - `shared` – veškerý kód aplikace:
   - `data/` – přístup k SQLite (`DatabaseManager`), cesty k souborům a logování (`AppFiles`, `AppLog`)
   - `models/` – datový model záznamu a filtrů
-  - `ui/` – `TimeTrackerViewModel` (stav obrazovky jako jeden `StateFlow`) a Compose obrazovky/dialogy
+  - `ui/` – `TimeTrackerViewModel` (stav obrazovky jako jeden `StateFlow`) a kořenová `App`; části hlavní obrazovky v `screen/`, dialogy v `dialogs/`, znovupoužitelné komponenty v `components/`, barvy v `theme/`
   - `utils/` – práce s časem (`TimeUtils`) a generování CSV (`CsvExport`)
