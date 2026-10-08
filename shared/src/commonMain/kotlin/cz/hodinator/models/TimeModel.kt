@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.models
+package cz.hodinator.models
 
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds

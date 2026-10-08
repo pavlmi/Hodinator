@@ -1,7 +1,7 @@
-package cz.pavlik.timetracker.data
+package cz.hodinator.data
 
-import cz.pavlik.timetracker.models.NO_PROJECT_NAME
-import cz.pavlik.timetracker.models.TimeRecord
+import cz.hodinator.models.NO_PROJECT_NAME
+import cz.hodinator.models.TimeRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant

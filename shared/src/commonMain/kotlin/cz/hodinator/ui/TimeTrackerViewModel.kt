@@ -1,13 +1,13 @@
-package cz.pavlik.timetracker.ui
+package cz.hodinator.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import cz.pavlik.timetracker.data.AppLog
-import cz.pavlik.timetracker.data.DatabaseManager
-import cz.pavlik.timetracker.models.TimeFilter
-import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.utils.CsvExport
-import cz.pavlik.timetracker.utils.TimeUtils
+import cz.hodinator.data.AppLog
+import cz.hodinator.data.DatabaseManager
+import cz.hodinator.models.TimeFilter
+import cz.hodinator.models.TimeRecord
+import cz.hodinator.utils.CsvExport
+import cz.hodinator.utils.TimeUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

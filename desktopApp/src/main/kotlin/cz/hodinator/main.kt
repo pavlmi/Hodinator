@@ -1,13 +1,13 @@
-package cz.pavlik.timetracker
+package cz.hodinator
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
-import cz.pavlik.timetracker.data.AppFiles
-import cz.pavlik.timetracker.data.AppLog
-import cz.pavlik.timetracker.ui.App
-import cz.pavlik.timetracker.ui.TimeTrackerViewModel
+import cz.hodinator.data.AppFiles
+import cz.hodinator.data.AppLog
+import cz.hodinator.ui.App
+import cz.hodinator.ui.TimeTrackerViewModel
 import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
 

@@ -1,7 +1,7 @@
-package cz.pavlik.timetracker
+package cz.hodinator
 
-import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.utils.CsvExport
+import cz.hodinator.models.TimeRecord
+import cz.hodinator.utils.CsvExport
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlin.test.Test

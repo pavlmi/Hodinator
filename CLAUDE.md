@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Run: `./gradlew :desktopApp:run`
 - Run with hot reload: `./gradlew :desktopApp:hotRun --auto`
-- Tests: `./gradlew :shared:jvmTest` (single test: `./gradlew :shared:jvmTest --tests "cz.pavlik.timetracker.TimeUtilsTest"`). Tests live in `shared/src/jvmTest/kotlin` and use `kotlin.test`; `DatabaseManagerTest` runs against a temp SQLite file.
+- Tests: `./gradlew :shared:jvmTest` (single test: `./gradlew :shared:jvmTest --tests "cz.hodinator.TimeUtilsTest"`). Tests live in `shared/src/jvmTest/kotlin` and use `kotlin.test`; `DatabaseManagerTest` runs against a temp SQLite file.
 - Package native installer for current OS: `./gradlew :desktopApp:packageDmg` (also `packageMsi`, `packageDeb`, `packagePkg`; `packageDistributionForCurrentOS`). The app bundle is named `Hodinator`.
 
 Dependency versions live in `gradle/libs.versions.toml`. Configuration cache and build cache are enabled in `gradle.properties`.
@@ -21,7 +21,7 @@ Two Gradle modules:
 - `desktopApp` — only `main.kt`: starts Koin with `appModule`, gets the `TimeTrackerViewModel` singleton, and opens the Compose `Window` hosting `App(viewModel)`. On window close it calls `viewModel.saveRunningTimer()` (blocking) so a running timer is not lost. Packaging config (`compose.desktop { nativeDistributions }`) lives here; `modules("java.sql")` is required so the packaged runtime includes JDBC.
 - `shared` — all app code. Although it is a KMP module, the only target is `jvm()`, and `commonMain` freely uses JVM APIs (`java.sql`, `java.io.File`, AWT/Swing file dialogs). Adding a non-JVM target would require moving that code to `jvmMain` behind `expect`/`actual`.
 
-Flow inside `shared/src/commonMain/kotlin/cz/pavlik/timetracker/`:
+Flow inside `shared/src/commonMain/kotlin/cz/hodinator/`:
 - `DI.kt` — Koin `appModule`; `DatabaseManager` and `TimeTrackerViewModel` are singletons, wired by constructor injection.
 - `data/AppFiles.kt` — per-OS paths (`~/Library/Application Support/Hodinator` on macOS, `%APPDATA%/Hodinator` on Windows, `~/.local/share/Hodinator` on Linux) and `AppLog` (macOS: `~/Library/Logs/Hodinator.log`, elsewhere next to the DB; also printed to stdout).
 - `data/DatabaseManager.kt` — raw JDBC over SQLite (`records` table: `id`, `project_name`, `duration_seconds`, `timestamp` = record **start** as ISO-8601 text). Opens a new connection per call on `Dispatchers.IO`; the schema is created lazily on first use with `CREATE TABLE IF NOT EXISTS` (no migration system). Errors are thrown to the caller. Blank project names are stored as `NO_PROJECT_NAME` ("Bez projektu").

@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui
+package cz.hodinator.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -37,13 +37,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.ui.theme.AppColorScheme
-import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
-import cz.pavlik.timetracker.ui.theme.StopRed
-import cz.pavlik.timetracker.ui.theme.SurfaceDark
-import cz.pavlik.timetracker.ui.theme.TextPrimary
-import cz.pavlik.timetracker.ui.theme.TextSecondary
+import cz.hodinator.models.TimeRecord
+import cz.hodinator.ui.theme.AppColorScheme
+import cz.hodinator.ui.theme.PrimaryEmerald
+import cz.hodinator.ui.theme.StopRed
+import cz.hodinator.ui.theme.SurfaceDark
+import cz.hodinator.ui.theme.TextPrimary
+import cz.hodinator.ui.theme.TextSecondary
 
 @Composable fun App(viewModel: TimeTrackerViewModel) {
     MaterialTheme(colorScheme = AppColorScheme) {

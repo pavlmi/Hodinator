@@ -1,8 +1,8 @@
-package cz.pavlik.timetracker
+package cz.hodinator
 
-import cz.pavlik.timetracker.data.DatabaseManager
-import cz.pavlik.timetracker.models.NO_PROJECT_NAME
-import cz.pavlik.timetracker.models.TimeRecord
+import cz.hodinator.data.DatabaseManager
+import cz.hodinator.models.NO_PROJECT_NAME
+import cz.hodinator.models.TimeRecord
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
 import java.io.File

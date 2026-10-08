@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui.components
+package cz.hodinator.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,11 +36,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cz.pavlik.timetracker.ui.theme.BorderDark
-import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
-import cz.pavlik.timetracker.ui.theme.SurfaceVariantDark
-import cz.pavlik.timetracker.ui.theme.TextPrimary
-import cz.pavlik.timetracker.ui.theme.TextSecondary
+import cz.hodinator.ui.theme.BorderDark
+import cz.hodinator.ui.theme.PrimaryEmerald
+import cz.hodinator.ui.theme.SurfaceVariantDark
+import cz.hodinator.ui.theme.TextPrimary
+import cz.hodinator.ui.theme.TextSecondary
 
 /** Text that looks like a plain label but becomes editable on hover / click. */
 @Composable fun InlineEditableText(

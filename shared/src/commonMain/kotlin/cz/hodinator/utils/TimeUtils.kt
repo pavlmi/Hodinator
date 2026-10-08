@@ -1,7 +1,7 @@
-package cz.pavlik.timetracker.utils
+package cz.hodinator.utils
 
-import cz.pavlik.timetracker.models.TimeFilter
-import cz.pavlik.timetracker.models.TimeRecord
+import cz.hodinator.models.TimeFilter
+import cz.hodinator.models.TimeRecord
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek

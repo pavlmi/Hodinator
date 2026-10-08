@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.data
+package cz.hodinator.data
 
 import kotlinx.datetime.Clock
 import java.io.File

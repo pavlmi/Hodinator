@@ -14,7 +14,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "cz.pavlik.timetracker.MainKt"
+        mainClass = "cz.hodinator.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb, TargetFormat.Pkg)
@@ -27,7 +27,7 @@ compose.desktop {
             modules("java.sql")
 
             macOS {
-                bundleID = "cz.pavlik.timetracker"
+                bundleID = "cz.hodinator"
             }
         }
     }

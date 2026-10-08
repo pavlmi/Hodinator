@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui
+package cz.hodinator.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -39,18 +39,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cz.pavlik.timetracker.models.NO_PROJECT_NAME
-import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.ui.components.InlineEditableText
-import cz.pavlik.timetracker.ui.components.TimeInput
-import cz.pavlik.timetracker.ui.components.cardBackground
-import cz.pavlik.timetracker.ui.theme.DayGroupBackground
-import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
-import cz.pavlik.timetracker.ui.theme.StopRed
-import cz.pavlik.timetracker.ui.theme.SurfaceDark
-import cz.pavlik.timetracker.ui.theme.TextPrimary
-import cz.pavlik.timetracker.ui.theme.TextSecondary
-import cz.pavlik.timetracker.utils.TimeUtils
+import cz.hodinator.models.NO_PROJECT_NAME
+import cz.hodinator.models.TimeRecord
+import cz.hodinator.ui.components.InlineEditableText
+import cz.hodinator.ui.components.TimeInput
+import cz.hodinator.ui.components.cardBackground
+import cz.hodinator.ui.theme.DayGroupBackground
+import cz.hodinator.ui.theme.PrimaryEmerald
+import cz.hodinator.ui.theme.StopRed
+import cz.hodinator.ui.theme.SurfaceDark
+import cz.hodinator.ui.theme.TextPrimary
+import cz.hodinator.ui.theme.TextSecondary
+import cz.hodinator.utils.TimeUtils
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate

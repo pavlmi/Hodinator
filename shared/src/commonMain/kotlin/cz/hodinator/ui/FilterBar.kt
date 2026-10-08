@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui
+package cz.hodinator.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,14 +21,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cz.pavlik.timetracker.models.TimeFilter
-import cz.pavlik.timetracker.ui.components.SectionCard
-import cz.pavlik.timetracker.ui.components.SelectablePill
-import cz.pavlik.timetracker.ui.components.ToolbarButton
-import cz.pavlik.timetracker.ui.components.appTextFieldColors
-import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
-import cz.pavlik.timetracker.ui.theme.TextSecondary
-import cz.pavlik.timetracker.utils.TimeUtils
+import cz.hodinator.models.TimeFilter
+import cz.hodinator.ui.components.SectionCard
+import cz.hodinator.ui.components.SelectablePill
+import cz.hodinator.ui.components.ToolbarButton
+import cz.hodinator.ui.components.appTextFieldColors
+import cz.hodinator.ui.theme.PrimaryEmerald
+import cz.hodinator.ui.theme.TextSecondary
+import cz.hodinator.utils.TimeUtils
 
 private val TimeFilter.label: String
     get() = when (this) {

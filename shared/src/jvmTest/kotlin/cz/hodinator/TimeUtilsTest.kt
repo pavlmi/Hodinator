@@ -1,8 +1,8 @@
-package cz.pavlik.timetracker
+package cz.hodinator
 
-import cz.pavlik.timetracker.models.TimeFilter
-import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.utils.TimeUtils
+import cz.hodinator.models.TimeFilter
+import cz.hodinator.models.TimeRecord
+import cz.hodinator.utils.TimeUtils
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime

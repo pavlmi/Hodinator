@@ -1,6 +1,6 @@
-package cz.pavlik.timetracker.utils
+package cz.hodinator.utils
 
-import cz.pavlik.timetracker.models.TimeRecord
+import cz.hodinator.models.TimeRecord
 import kotlinx.datetime.TimeZone
 
 /** CSV for Excel with Czech locale: UTF-8 with BOM and semicolon as the separator. */

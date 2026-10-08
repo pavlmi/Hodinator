@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui.components
+package cz.hodinator.ui.components
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -36,12 +36,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import cz.pavlik.timetracker.ui.theme.BorderDark
-import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
-import cz.pavlik.timetracker.ui.theme.SurfaceDark
-import cz.pavlik.timetracker.ui.theme.SurfaceVariantDark
-import cz.pavlik.timetracker.ui.theme.TextPrimary
-import cz.pavlik.timetracker.ui.theme.TextSecondary
+import cz.hodinator.ui.theme.BorderDark
+import cz.hodinator.ui.theme.PrimaryEmerald
+import cz.hodinator.ui.theme.SurfaceDark
+import cz.hodinator.ui.theme.SurfaceVariantDark
+import cz.hodinator.ui.theme.TextPrimary
+import cz.hodinator.ui.theme.TextSecondary
 
 /** Background with the border used by all "cards" in the app. */
 fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.dp)): Modifier =

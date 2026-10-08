@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui
+package cz.hodinator.ui
 
 import java.awt.FileDialog
 import java.awt.Frame

@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui
+package cz.hodinator.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
@@ -53,15 +53,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import cz.pavlik.timetracker.models.TimeRecord
-import cz.pavlik.timetracker.ui.theme.BorderDark
-import cz.pavlik.timetracker.ui.theme.PrimaryEmerald
-import cz.pavlik.timetracker.ui.theme.SurfaceDark
-import cz.pavlik.timetracker.ui.theme.SurfaceVariantDark
-import cz.pavlik.timetracker.ui.theme.TextPrimary
-import cz.pavlik.timetracker.ui.theme.TextSecondary
-import cz.pavlik.timetracker.ui.theme.TooltipBackground
-import cz.pavlik.timetracker.utils.TimeUtils
+import cz.hodinator.models.TimeRecord
+import cz.hodinator.ui.theme.BorderDark
+import cz.hodinator.ui.theme.PrimaryEmerald
+import cz.hodinator.ui.theme.SurfaceDark
+import cz.hodinator.ui.theme.SurfaceVariantDark
+import cz.hodinator.ui.theme.TextPrimary
+import cz.hodinator.ui.theme.TextSecondary
+import cz.hodinator.ui.theme.TooltipBackground
+import cz.hodinator.utils.TimeUtils
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone

@@ -1,4 +1,4 @@
-package cz.pavlik.timetracker.ui.theme
+package cz.hodinator.ui.theme
 
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.ui.graphics.Color
