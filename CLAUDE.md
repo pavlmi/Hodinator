@@ -10,22 +10,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - Run: `./gradlew :desktopApp:run`
 - Run with hot reload: `./gradlew :desktopApp:hotRun --auto`
-- Tests: `./gradlew :shared:jvmTest` (single test: `./gradlew :shared:jvmTest --tests "cz.pavlik.timetracker.SomeTest"`). No test sources exist yet — they would go in `shared/src/jvmTest/kotlin` (or `commonTest`).
-- Package native installer for current OS: `./gradlew :desktopApp:packageDmg` (also `packageMsi`, `packageDeb`, `packagePkg`; `packageDistributionForCurrentOS`).
+- Tests: `./gradlew :shared:jvmTest` (single test: `./gradlew :shared:jvmTest --tests "cz.pavlik.timetracker.TimeUtilsTest"`). Tests live in `shared/src/jvmTest/kotlin` and use `kotlin.test`; `DatabaseManagerTest` runs against a temp SQLite file.
+- Package native installer for current OS: `./gradlew :desktopApp:packageDmg` (also `packageMsi`, `packageDeb`, `packagePkg`; `packageDistributionForCurrentOS`). The app bundle is named `Hodinator`.
 
 Dependency versions live in `gradle/libs.versions.toml`. Configuration cache and build cache are enabled in `gradle.properties`.
 
 ## Architecture
 
 Two Gradle modules:
-- `desktopApp` — only `main.kt`: starts Koin with `appModule`, opens the Compose `Window` hosting `App()`. Packaging config (`compose.desktop { nativeDistributions }`) lives here; `modules("java.sql")` is required so the packaged runtime includes JDBC.
+- `desktopApp` — only `main.kt`: starts Koin with `appModule`, gets the `TimeTrackerViewModel` singleton, and opens the Compose `Window` hosting `App(viewModel)`. On window close it calls `viewModel.saveRunningTimer()` (blocking) so a running timer is not lost. Packaging config (`compose.desktop { nativeDistributions }`) lives here; `modules("java.sql")` is required so the packaged runtime includes JDBC.
 - `shared` — all app code. Although it is a KMP module, the only target is `jvm()`, and `commonMain` freely uses JVM APIs (`java.sql`, `java.io.File`, AWT/Swing file dialogs). Adding a non-JVM target would require moving that code to `jvmMain` behind `expect`/`actual`.
 
 Flow inside `shared/src/commonMain/kotlin/cz/pavlik/timetracker/`:
-- `DI.kt` — Koin `appModule`; `DatabaseManager` is a singleton.
-- `data/DatabaseManager.kt` — raw JDBC over SQLite (`records` table: `id`, `project_name`, `duration_seconds`, `timestamp` as ISO-8601 text). Opens a new connection per call on `Dispatchers.IO`; errors are caught and logged, never thrown. Blank project names become `"Bez projektu"`. Schema is created with `CREATE TABLE IF NOT EXISTS` — there is no migration system.
-  - DB location: `~/Library/Application Support/Hodinator/time_tracker.db` (macOS), `%APPDATA%/Hodinator` (Windows), `~/.local/share/Hodinator` (Linux). On first run it copies an old dev DB from `./time_tracker.db` or `.../cz.pavlik.timetracker/` if present.
-  - Log file: `~/Library/Logs/Hodinator.log` (via `logApp`, also printed to stdout).
-- `ui/ViewModel.kt` — `TimeTrackerViewModel` (gets `DatabaseManager` via `KoinComponent.inject`) exposes a single `StateFlow<TimeTrackerState>`. Every mutation writes to the DB then calls `loadRecords()` to reload the full list. Filtering (`filteredRecords`, `totalSeconds`) is computed in the state class from `currentFilter` + custom date strings. The running timer is an in-memory coroutine ticking `elapsedSeconds`; a record is only persisted when the timer is stopped. Toasts are a timed `toastMessage` field.
-- `ui/Screen.kt` — all composables (`App` → `TimeTrackerScreen` with timer bar, filter bar, day-grouped record list, inline editing, CSV export and delete dialogs). `ui/MonthlyStatsDialog.kt` is the monthly overview (stat tiles + per-day bar chart drawn with plain Compose layouts/Canvas, no chart library; table toggle). Theme colors are in `ui/utils/Colors.kt` (dark-only `customColorScheme`).
-- `utils/TimeUtils.kt` — formatting/parsing (dates as `dd.MM.yyyy`, times `HH:mm`), record filtering by `TimeFilter`, and monthly CSV generation (UTF-8 BOM, `;` separator, totals grouped by project). `utils/CsvExportUtils.kt` shows an AWT `FileDialog` save prompt, falling back to `JFileChooser`.
+- `DI.kt` — Koin `appModule`; `DatabaseManager` and `TimeTrackerViewModel` are singletons, wired by constructor injection.
+- `data/AppFiles.kt` — per-OS paths (`~/Library/Application Support/Hodinator` on macOS, `%APPDATA%/Hodinator` on Windows, `~/.local/share/Hodinator` on Linux) and `AppLog` (macOS: `~/Library/Logs/Hodinator.log`, elsewhere next to the DB; also printed to stdout).
+- `data/DatabaseManager.kt` — raw JDBC over SQLite (`records` table: `id`, `project_name`, `duration_seconds`, `timestamp` = record **start** as ISO-8601 text). Opens a new connection per call on `Dispatchers.IO`; the schema is created lazily on first use with `CREATE TABLE IF NOT EXISTS` (no migration system). Errors are thrown to the caller. Blank project names are stored as `NO_PROJECT_NAME` ("Bez projektu").
+- `models/TimeModel.kt` — `TimeRecord(id, projectName, durationSeconds, startTime)` with computed `endTime`; `TimeFilter` enum.
+- `ui/TimeTrackerViewModel.kt` — exposes a single `StateFlow<TimeTrackerState>`. Every mutation goes through `launchDbAction`, which writes to the DB, reloads the full list, and on failure logs and shows an error toast. `filteredRecords`/`totalSeconds` are lazy properties of the state. The running timer keeps `startTime` in memory and derives `elapsedSeconds` from the clock each second; a record is only persisted when the timer is stopped (or the window closes). Toasts are a timed `toast: Toast?` field (`isError` for failures).
+- UI composables: `ui/App.kt` (root screen, dialog visibility, toast), `ui/TimerBar.kt`, `ui/FilterBar.kt`, `ui/RecordList.kt` (day-grouped list, inline-editable `RecordCard`), `ui/Dialogs.kt` (CSV export + delete confirm), `ui/MonthlyStatsDialog.kt` (stat tiles + per-day bar chart drawn with plain Compose layouts/Canvas, no chart library; table toggle). Reusable pieces are in `ui/components/` (`AppDialog`, `DialogButtons`, `SectionCard`, `SelectablePill`, `InlineEditableText`, `TimeInput`). Theme colors are in `ui/theme/Colors.kt` (dark-only `AppColorScheme`).
+- `ui/SaveFileDialog.kt` — AWT `FileDialog` save prompt, falling back to `JFileChooser`; only picks the file, the ViewModel writes it.
+- `utils/TimeUtils.kt` — formatting/parsing (dates `dd.MM.yyyy`, times `HH:mm`), Czech day/month names, record filtering by `TimeFilter`, daily totals for a month.
+- `utils/CsvExport.kt` — monthly CSV (UTF-8 BOM, `;` separator, RFC-4180 quoting, totals per project sorted by time).

@@ -1,28 +1,53 @@
-This is a Kotlin Multiplatform project targeting Desktop (JVM).
+# Hodinátor
 
-* [/shared](./shared/src) is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - [commonMain](./shared/src/commonMain/kotlin) is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    the [iosMain](./shared/src/iosMain/kotlin) folder would be the right place for such calls.
-    Similarly, if you want to edit the Desktop (JVM) specific part, the [jvmMain](./shared/src/jvmMain/kotlin)
-    folder is the appropriate location.
+Jednoduchá desktopová aplikace na měření času stráveného na projektech. Napíšeš, na čem pracuješ, zmáčkneš **START**,
+a po **STOP** se záznam uloží. Napsaná v Kotlinu s [Compose Multiplatform](https://www.jetbrains.com/compose-multiplatform/)
+pro desktop (JVM), data se ukládají lokálně do SQLite.
 
-### Running the apps
+## Co umí
 
-Use the run configurations provided by the run widget in your IDE's toolbar. You can also use these commands and options:
+- **Časovač** – jeden běžící časovač s názvem projektu. Při zavření okna se rozběhnutý čas automaticky uloží.
+- **Seznam záznamů** seskupený po dnech, s denními součty.
+- **Inline editace** – název, datum, začátek i konec záznamu jde přímo přepsat. Uloží se po opuštění pole nebo Enterem.
+- **Rychlé akce** – spustit znovu stejný projekt, vytvořit kopii záznamu, smazat.
+- **Filtry** – vše / dnes / tento měsíc / minulý měsíc / vlastní rozsah, s celkovým součtem.
+- **Měsíční přehled** – souhrnné statistiky a graf odpracovaných hodin po dnech (případně tabulka).
+- **Export do CSV** – součty za měsíc po projektech, připravené pro Excel (UTF-8 s BOM, oddělovač `;`).
 
-- Desktop app:
-  - Hot reload: `./gradlew :desktopApp:hotRun --auto`
-  - Standard run: `./gradlew :desktopApp:run`
+## Spuštění
 
-### Running tests
+Potřeba je JDK 17+.
 
-Use the run button in your IDE's editor gutter, or run tests using Gradle tasks:
+```bash
+./gradlew :desktopApp:run              # spuštění
+./gradlew :desktopApp:hotRun --auto    # spuštění s hot reloadem při vývoji
+./gradlew :shared:jvmTest              # testy
+```
 
-- Desktop tests: `./gradlew :shared:jvmTest`
+## Instalační balíček
 
----
+```bash
+./gradlew :desktopApp:packageDistributionForCurrentOS
+```
 
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+Vytvoří instalátor pro aktuální OS (`.dmg` na macOS, `.msi` na Windows, `.deb` na Linuxu)
+v `desktopApp/build/compose/binaries/main/`.
+
+## Kde jsou data
+
+| OS      | Databáze                                                  | Log                            |
+|---------|-----------------------------------------------------------|--------------------------------|
+| macOS   | `~/Library/Application Support/Hodinator/time_tracker.db` | `~/Library/Logs/Hodinator.log` |
+| Windows | `%APPDATA%\Hodinator\time_tracker.db`                     | `%APPDATA%\Hodinator\Hodinator.log` |
+| Linux   | `~/.local/share/Hodinator/time_tracker.db`                | `~/.local/share/Hodinator/Hodinator.log` |
+
+Záloha = zkopírovat soubor `time_tracker.db`.
+
+## Struktura projektu
+
+- `desktopApp` – vstupní bod (`main.kt`): inicializace Koinu, okno aplikace, konfigurace balíčků.
+- `shared` – veškerý kód aplikace:
+  - `data/` – přístup k SQLite (`DatabaseManager`), cesty k souborům a logování (`AppFiles`, `AppLog`)
+  - `models/` – datový model záznamu a filtrů
+  - `ui/` – `TimeTrackerViewModel` (stav obrazovky jako jeden `StateFlow`) a Compose obrazovky/dialogy
+  - `utils/` – práce s časem (`TimeUtils`) a generování CSV (`CsvExport`)
