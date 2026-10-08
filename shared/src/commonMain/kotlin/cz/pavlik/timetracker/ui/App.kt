@@ -115,7 +115,7 @@ import cz.pavlik.timetracker.ui.theme.TextSecondary
             )
         }
 
-        // Při skrývání je state.toast už null, proto si poslední zprávu pamatujeme, aby animace měla co zobrazit.
+        // While hiding, state.toast is already null, so keep the last message around for the exit animation.
         var lastToast by remember { mutableStateOf(state.toast) }
         state.toast?.let { lastToast = it }
         AnimatedVisibility(

@@ -14,7 +14,8 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
-/** Formátování a parsování časů v českém formátu (datum `dd.MM.yyyy`, čas `HH:mm`) a výpočty nad záznamy. */
+
+/** Formatting and parsing in Czech format (date `dd.MM.yyyy`, time `HH:mm`) and calculations over records. */
 object TimeUtils {
 
     private val DAY_NAMES = listOf("Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle")
@@ -24,7 +25,7 @@ object TimeUtils {
         "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
     )
 
-    /** Např. "07:32:05". */
+    /** E.g. "07:32:05". */
     fun formatSeconds(totalSeconds: Long): String {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
@@ -32,7 +33,7 @@ object TimeUtils {
         return "%02d:%02d:%02d".format(hours, minutes, seconds)
     }
 
-    /** Např. "7 h 32 min", "45 min", "0 h". */
+    /** E.g. "7 h 32 min", "45 min", "0 h". */
     fun formatHoursMinutes(totalSeconds: Long): String {
         val hours = totalSeconds / 3600
         val minutes = (totalSeconds % 3600) / 60
@@ -52,14 +53,14 @@ object TimeUtils {
 
     fun dayOfWeekShortName(date: LocalDate): String = dayOfWeekName(date).take(2)
 
-    /** Např. "Pondělí 05.10.2026". */
+    /** E.g. "Pondělí 05.10.2026". */
     fun dayWithDate(date: LocalDate): String = "${dayOfWeekName(date)} ${formatDate(date)}"
 
     fun isWeekend(date: LocalDate): Boolean = date.dayOfWeek == DayOfWeek.SATURDAY || date.dayOfWeek == DayOfWeek.SUNDAY
 
     fun monthName(monthNumber: Int): String = MONTH_NAMES[monthNumber - 1]
 
-    /** Parsuje "d.M.yyyy" (s úvodními nulami i bez). Neplatné datum vrací `null`. */
+    /** Parses "d.M.yyyy" (with or without leading zeros). Returns `null` for an invalid date. */
     fun parseDate(text: String): LocalDate? {
         val parts = text.trim().split(".").map { it.trim().toIntOrNull() ?: return null }
         if (parts.size != 3) return null
@@ -67,7 +68,7 @@ object TimeUtils {
         return runCatching { LocalDate(year, month, day) }.getOrNull()
     }
 
-    /** Parsuje "H:mm". Neplatný čas vrací `null`. */
+    /** Parses "H:mm". Returns `null` for an invalid time. */
     fun parseTime(text: String): LocalTime? {
         val parts = text.trim().split(":").map { it.trim().toIntOrNull() ?: return null }
         if (parts.size != 2) return null
@@ -100,7 +101,7 @@ object TimeUtils {
         }
     }
 
-    /** Záznamy začínající v daném měsíci. */
+    /** Records starting in the given month. */
     fun recordsInMonth(
         records: List<TimeRecord>,
         year: Int,
@@ -111,7 +112,7 @@ object TimeUtils {
         date.year == year && date.monthNumber == monthNumber
     }
 
-    /** Odpracované sekundy pro každý den daného měsíce (včetně dnů bez záznamu). Záznam se počítá ke dni svého začátku. */
+    /** Seconds worked for every day of the month (including days without records). A record counts toward the day it starts. */
     fun dailyTotalsForMonth(
         records: List<TimeRecord>,
         year: Int,

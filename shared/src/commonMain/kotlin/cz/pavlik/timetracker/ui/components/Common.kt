@@ -43,7 +43,7 @@ import cz.pavlik.timetracker.ui.theme.SurfaceVariantDark
 import cz.pavlik.timetracker.ui.theme.TextPrimary
 import cz.pavlik.timetracker.ui.theme.TextSecondary
 
-/** Pozadí s rámečkem, jakým jsou orámované všechny „karty“ v aplikaci. */
+/** Background with the border used by all "cards" in the app. */
 fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.dp)): Modifier =
     clip(shape).background(color).border(1.dp, BorderDark, shape)
 
@@ -107,7 +107,7 @@ fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.d
     unfocusedTextColor = TextPrimary,
 )
 
-/** Jednotný vzhled dialogů: karta pevné šířky s obsahem ve sloupci. */
+/** Common dialog look: a fixed-width card with content laid out in a column. */
 @Composable fun AppDialog(onDismiss: () -> Unit, width: Dp, content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -129,7 +129,7 @@ fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.d
     Text(text, style = TextStyle(fontSize = 13.sp, color = TextSecondary))
 }
 
-/** Tlačítka „Zrušit“ + potvrzující akce zarovnaná vpravo. Po potvrzení se dialog zavře. */
+/** "Zrušit" + confirm buttons aligned to the end. The dialog is dismissed after confirming. */
 @Composable fun DialogButtons(
     confirmLabel: String,
     confirmColor: Color,

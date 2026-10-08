@@ -3,7 +3,8 @@ package cz.pavlik.timetracker.models
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds
 
-/** Název, pod který se ukládají záznamy bez vyplněného projektu. */
+
+/** Name used to store records whose project name was left blank. */
 const val NO_PROJECT_NAME = "Bez projektu"
 
 data class TimeRecord(

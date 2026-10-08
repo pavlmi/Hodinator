@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-"Hodinátor" — a Compose Multiplatform desktop (JVM-only) time-tracking app. Start/stop a timer per project, records are stored in SQLite, listed/filtered by day, editable inline, and exportable as a monthly CSV summary. UI strings, comments and CSV headers are in Czech; keep new user-facing text in Czech.
+"Hodinátor" — a Compose Multiplatform desktop (JVM-only) time-tracking app. Start/stop a timer per project, records are stored in SQLite, listed/filtered by day, editable inline, and exportable as a monthly CSV summary. UI strings and CSV headers are in Czech; keep new user-facing text in Czech. Code comments, KDoc and log messages are in English.
 
 ## Commands
 

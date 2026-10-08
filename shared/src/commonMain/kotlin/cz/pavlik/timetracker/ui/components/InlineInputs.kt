@@ -42,7 +42,7 @@ import cz.pavlik.timetracker.ui.theme.SurfaceVariantDark
 import cz.pavlik.timetracker.ui.theme.TextPrimary
 import cz.pavlik.timetracker.ui.theme.TextSecondary
 
-/** Text, který vypadá jako běžný popisek, ale po najetí myší / kliknutí jde upravit. */
+/** Text that looks like a plain label but becomes editable on hover / click. */
 @Composable fun InlineEditableText(
     value: String,
     onValueChange: (String) -> Unit,
@@ -86,7 +86,7 @@ import cz.pavlik.timetracker.ui.theme.TextSecondary
     }
 }
 
-/** Malé políčko pro čas ve formátu HH:mm. */
+/** Small input for a time in HH:mm format. */
 @Composable fun TimeInput(value: String, onValueChange: (String) -> Unit, onCommit: () -> Unit) {
     val shape = RoundedCornerShape(6.dp)
     CommitOnBlurTextField(
@@ -112,7 +112,7 @@ import cz.pavlik.timetracker.ui.theme.TextSecondary
     }
 }
 
-/** Jednořádkové pole, které potvrzuje změnu při ztrátě fokusu. Enter fokus zruší, takže změnu také potvrdí. */
+/** Single-line field that commits on focus loss. Enter clears focus, so it commits as well. */
 @Composable private fun CommitOnBlurTextField(
     value: String,
     onValueChange: (String) -> Unit,

@@ -23,7 +23,7 @@ compose.desktop {
             packageVersion = "1.0.0"
             description = "Jednoduché měření času stráveného na projektech"
 
-            // Balený runtime obsahuje jen vyjmenované moduly JDK; JDBC (SQLite) potřebuje java.sql.
+            // The packaged runtime only contains the listed JDK modules; JDBC (SQLite) needs java.sql.
             modules("java.sql")
 
             macOS {

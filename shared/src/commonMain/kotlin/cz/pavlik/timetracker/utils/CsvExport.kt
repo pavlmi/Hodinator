@@ -3,14 +3,14 @@ package cz.pavlik.timetracker.utils
 import cz.pavlik.timetracker.models.TimeRecord
 import kotlinx.datetime.TimeZone
 
-/** CSV pro Excel v české lokalizaci: UTF-8 s BOM a středník jako oddělovač. */
+/** CSV for Excel with Czech locale: UTF-8 with BOM and semicolon as the separator. */
 object CsvExport {
     private const val SEPARATOR = ';'
     private const val BOM = "﻿"
 
     fun defaultMonthlyFileName(year: Int, monthNumber: Int) = "TimeTracker_Prehled_${year}_${"%02d".format(monthNumber)}.csv"
 
-    /** Součet času po projektech za daný měsíc, seřazeno od projektu s nejvíce odpracovaným časem. */
+    /** Total time per project for the given month, sorted by most time spent first. */
     fun monthlySummary(
         records: List<TimeRecord>,
         year: Int,

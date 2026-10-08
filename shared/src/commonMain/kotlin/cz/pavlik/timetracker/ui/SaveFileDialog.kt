@@ -7,8 +7,8 @@ import javax.swing.JFileChooser
 import javax.swing.filechooser.FileNameExtensionFilter
 
 /**
- * Zobrazí nativní dialog pro uložení CSV souboru a vrátí zvolený soubor (vždy s příponou `.csv`),
- * nebo `null`, pokud uživatel volbu zrušil. Pokud nativní dialog není k dispozici, použije se Swing.
+ * Shows a native save dialog for a CSV file and returns the chosen file (always with a `.csv` extension),
+ * or `null` if the user cancelled. Falls back to Swing when the native dialog isn't available.
  */
 fun chooseCsvSaveFile(title: String, defaultFileName: String): File? {
     val selected = try {

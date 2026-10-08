@@ -197,7 +197,7 @@ private val TooltipHeight = 46.dp
     }
 }
 
-/** Zaokrouhlí maximum osy Y nahoru na celé kroky (v hodinách), aby osa měla nejvýš ~5 čar. */
+/** Rounds the Y axis maximum up to whole steps (in hours) so the axis has at most ~5 grid lines. */
 private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
     val maxHours = ceil(maxSeconds / 3600.0).toInt().coerceAtLeast(1)
     val step = listOf(1, 2, 4, 6, 8, 12).first { maxHours <= it * 5 }
@@ -212,7 +212,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().height(ChartHeight)) {
-            // Popisky osy Y
+            // Y axis labels
             Box(Modifier.width(YAxisWidth).fillMaxHeight()) {
                 for (h in 0..axisMaxHours step stepHours) {
                     val fraction = h / axisMaxHours.toFloat()
@@ -250,7 +250,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                             else if (hoveredIndex == index) hoveredIndex = null
                         }
 
-                        // Celý sloupec je cíl pro najetí myší, ne jen samotný (tenký) sloupek.
+                        // The whole column is the hover target, not just the (thin) bar.
                         Box(
                             Modifier
                                 .weight(1f)
@@ -303,7 +303,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
             }
         }
 
-        // Popisky osy X: číslo dne + zkratka dne v týdnu
+        // X axis labels: day of month + short weekday name
         Row(Modifier.fillMaxWidth().padding(start = YAxisWidth, top = 6.dp)) {
             dailyTotals.forEachIndexed { index, (date, _) ->
                 val isToday = date == today

@@ -12,7 +12,7 @@ import kotlinx.coroutines.runBlocking
 import org.koin.core.context.startKoin
 
 fun main() {
-    AppLog.info("Spuštění aplikace, databáze: ${AppFiles.databaseFile.absolutePath}")
+    AppLog.info("App started, database: ${AppFiles.databaseFile.absolutePath}")
     val koin = startKoin { modules(appModule) }.koin
     val viewModel = koin.get<TimeTrackerViewModel>()
 
@@ -21,10 +21,10 @@ fun main() {
             title = "Hodinátor",
             state = rememberWindowState(width = 1100.dp, height = 800.dp),
             onCloseRequest = {
-                // Běžící časovač by se jinak při zavření okna ztratil.
+                // Otherwise a running timer would be lost when the window closes.
                 runBlocking {
                     runCatching { viewModel.saveRunningTimer() }
-                        .onFailure { AppLog.error("Uložení běžícího časovače při ukončení selhalo", it) }
+                        .onFailure { AppLog.error("Failed to save the running timer on exit", it) }
                 }
                 exitApplication()
             },

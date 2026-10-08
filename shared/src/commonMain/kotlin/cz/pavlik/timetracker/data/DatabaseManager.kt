@@ -11,8 +11,8 @@ import java.sql.DriverManager
 import java.sql.PreparedStatement
 
 /**
- * Přístup k SQLite databázi se záznamy. Každé volání otevírá vlastní spojení na [Dispatchers.IO].
- * Chyby se propagují volajícímu, aby je mohl ukázat uživateli.
+ * Access to the SQLite database of time records. Each call opens its own connection on [Dispatchers.IO].
+ * Errors propagate to the caller so they can be shown to the user.
  */
 class DatabaseManager(dbFile: File) {
 
@@ -44,7 +44,7 @@ class DatabaseManager(dbFile: File) {
             }
     }
 
-    /** Vloží [record] jako nový záznam; jeho `id` se ignoruje. */
+    /** Inserts [record] as a new row; its `id` is ignored. */
     suspend fun insertRecord(record: TimeRecord) = withConnection { conn ->
         conn.prepareStatement("INSERT INTO records (project_name, duration_seconds, timestamp) VALUES (?, ?, ?)")
             .use { stmt ->
@@ -89,7 +89,7 @@ class DatabaseManager(dbFile: File) {
     }
 
     private companion object {
-        // Sloupec `timestamp` obsahuje začátek záznamu jako ISO-8601 text.
+        // The `timestamp` column holds the record's start as ISO-8601 text.
         val CREATE_TABLE_SQL = """
             CREATE TABLE IF NOT EXISTS records (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,

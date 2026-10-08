@@ -3,7 +3,7 @@ package cz.pavlik.timetracker.data
 import kotlinx.datetime.Clock
 import java.io.File
 
-/** Umístění souborů aplikace podle konvencí daného OS. */
+
 object AppFiles {
     private const val APP_DIR_NAME = "Hodinator"
 
@@ -24,7 +24,7 @@ object AppFiles {
         get() = if (isMac) File(userHome, "Library/Logs/$APP_DIR_NAME.log") else File(dataDir, "$APP_DIR_NAME.log")
 }
 
-/** Minimalistický logger: zapisuje do [AppFiles.logFile] a na stdout. Logování nesmí nikdy shodit aplikaci. */
+/** Minimal logger writing to [AppFiles.logFile] and stdout. Logging must never crash the app. */
 object AppLog {
     fun info(message: String) = write("INFO", message)
 

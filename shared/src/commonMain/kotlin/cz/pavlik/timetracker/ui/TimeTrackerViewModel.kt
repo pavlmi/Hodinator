@@ -53,7 +53,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         }
     }
 
-    /** Spustí časovač pro projekt daného záznamu. Případný běžící časovač se nejdřív uloží. */
+    /** Starts the timer for the record's project. A running timer is saved first. */
     fun startAgain(record: TimeRecord) = launchDbAction("Záznam se nepodařilo uložit") {
         if (_uiState.value.isRunning) {
             saveRunningTimer()
@@ -63,8 +63,8 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
     }
 
     /**
-     * Zastaví běžící časovač a uloží ho jako záznam. Volá se i při zavírání okna,
-     * aby se rozpracovaný čas neztratil.
+     * Stops the running timer and saves it as a record. Also called when the window closes,
+     * so tracked time isn't lost.
      */
     suspend fun saveRunningTimer() {
         val state = _uiState.value
@@ -79,8 +79,8 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         try {
             db.insertRecord(record)
         } catch (e: Exception) {
-            // Časovač už je zastavený, takže v logu musí zůstat vše potřebné k ruční obnově záznamu.
-            AppLog.error("Neuložený záznam: $record")
+            // The timer is already stopped, so the log must contain everything needed to restore the record manually.
+            AppLog.error("Unsaved record: $record")
             throw e
         }
     }
@@ -114,7 +114,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
                 withContext(Dispatchers.IO) { file.writeText(content, Charsets.UTF_8) }
                 showToast("CSV soubor byl uložen: ${file.name}")
             } catch (e: Exception) {
-                AppLog.error("Zápis CSV do ${file.absolutePath} selhal", e)
+                AppLog.error("Writing CSV to ${file.absolutePath} failed", e)
                 showToast("CSV soubor se nepodařilo uložit", isError = true)
             }
         }
@@ -129,7 +129,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         val startTime = Clock.System.now()
         _uiState.update { it.copy(projectName = projectName, startTime = startTime, elapsedSeconds = 0L) }
 
-        // Uplynulý čas se počítá z času spuštění, takže nedrifuje a počítá správně i po uspání počítače.
+        // Elapsed time is derived from the start time, so it doesn't drift and stays correct after the computer sleeps.
         timerJob?.cancel()
         timerJob = viewModelScope.launch {
             while (isActive) {
@@ -153,7 +153,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         }
     }
 
-    /** Spustí databázovou operaci; při chybě ji zaloguje a zobrazí uživateli [errorMessage]. */
+    /** Runs a database action; on failure logs it and shows [errorMessage] to the user. */
     private fun launchDbAction(errorMessage: String, action: suspend () -> Unit) {
         viewModelScope.launch {
             try {
@@ -182,7 +182,7 @@ data class TimeTrackerState(
 ) {
     val isRunning: Boolean get() = startTime != null
 
-    // Lazy, aby se filtr nepřepočítával při každém ticku časovače víc než jednou.
+    // Lazy so the filter isn't recomputed more than once per timer tick.
     val filteredRecords: List<TimeRecord> by lazy {
         TimeUtils.filterRecords(
             records = records,

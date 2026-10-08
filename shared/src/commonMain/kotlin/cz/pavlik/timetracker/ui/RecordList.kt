@@ -76,12 +76,12 @@ import kotlinx.datetime.toLocalDateTime
 
     val timeZone = remember { TimeZone.currentSystemDefault() }
     val recordsByDay = remember(records) { records.groupBy { it.startTime.toLocalDateTime(timeZone).date } }
-    // Počítá se při každé změně záznamů, takže „Dnes“/„Včera“ sedí i když aplikace běží přes půlnoc.
+    // Recomputed whenever records change, so "Dnes"/"Včera" stay correct when the app runs past midnight.
     val today = remember(records) { Clock.System.now().toLocalDateTime(timeZone).date }
 
     LazyColumn(Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         recordsByDay.forEach { (date, dayRecords) ->
-            // Celý den je jeden vizuální blok, aby bylo na první pohled jasné, které záznamy k sobě patří.
+            // Each day is one visual block so it's obvious at a glance which records belong together.
             item(key = date.toString()) {
                 Column(
                     Modifier
@@ -143,8 +143,8 @@ import kotlinx.datetime.toLocalDateTime
 }
 
 /**
- * Řádek záznamu s inline editací názvu, data a času začátku/konce. Změny se ukládají při opuštění pole
- * (nebo Enterem); neplatný vstup se vrátí na původní hodnotu.
+ * A record row with inline editing of name, date and start/end time. Changes are saved when a field
+ * loses focus (or on Enter); invalid input reverts to the original value.
  */
 @Composable private fun RecordCard(
     record: TimeRecord,
@@ -175,10 +175,10 @@ import kotlinx.datetime.toLocalDateTime
         val newEndTime = TimeUtils.parseTime(endText)
         if (newDate == null || newStartTime == null || newEndTime == null) return resetTexts()
 
-        // Změna data posouvá začátek i konec stejně (zachová se i záznam přes půlnoc).
+        // Changing the date shifts start and end equally (keeps records spanning midnight intact).
         val dayShift = newDate.toEpochDays() - start.date.toEpochDays()
         val newEndDate = end.date.plus(dayShift, DateTimeUnit.DAY)
-        // Sekundy se v UI needitují, proto se zachovají z původního záznamu.
+        // Seconds aren't editable in the UI, so keep them from the original record.
         val newStart = LocalDateTime(newDate, LocalTime(newStartTime.hour, newStartTime.minute, start.second, start.nanosecond))
             .toInstant(timeZone)
         val newEnd = LocalDateTime(newEndDate, LocalTime(newEndTime.hour, newEndTime.minute, end.second, end.nanosecond))
