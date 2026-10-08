@@ -4,9 +4,7 @@ import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds
 
 
-/** Name used to store records whose project name was left blank. */
 const val NO_PROJECT_NAME = "Bez projektu"
-
 private val WHITESPACE = Regex("\\s+")
 
 /**

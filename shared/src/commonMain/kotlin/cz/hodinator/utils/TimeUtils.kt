@@ -17,13 +17,8 @@ import kotlinx.datetime.toLocalDateTime
 
 /** Formatting and parsing in Czech format (date `dd.MM.yyyy`, time `HH:mm`) and calculations over records. */
 object TimeUtils {
-
     private val DAY_NAMES = listOf("Pondělí", "Úterý", "Středa", "Čtvrtek", "Pátek", "Sobota", "Neděle")
-
-    private val MONTH_NAMES = listOf(
-        "Leden", "Únor", "Březen", "Duben", "Květen", "Červen",
-        "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec",
-    )
+    private val MONTH_NAMES = listOf("Leden", "Únor", "Březen", "Duben", "Květen", "Červen", "Červenec", "Srpen", "Září", "Říjen", "Listopad", "Prosinec")
 
     /** E.g. "07:32:05". */
     fun formatSeconds(totalSeconds: Long): String {
@@ -68,7 +63,6 @@ object TimeUtils {
         return runCatching { LocalDate(year, month, day) }.getOrNull()
     }
 
-    /** Parses "H:mm". Returns `null` for an invalid time. */
     fun parseTime(text: String): LocalTime? {
         val parts = text.trim().split(":").map { it.trim().toIntOrNull() ?: return null }
         if (parts.size != 2) return null

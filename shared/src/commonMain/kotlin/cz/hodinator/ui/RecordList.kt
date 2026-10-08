@@ -1,33 +1,15 @@
 package cz.hodinator.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,31 +19,13 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.unit.*
 import cz.hodinator.models.NO_PROJECT_NAME
 import cz.hodinator.models.TimeRecord
-import cz.hodinator.ui.components.InlineEditableText
-import cz.hodinator.ui.components.TimeInput
-import cz.hodinator.ui.components.cardBackground
-import cz.hodinator.ui.theme.DayGroupBackground
-import cz.hodinator.ui.theme.PrimaryEmerald
-import cz.hodinator.ui.theme.StopRed
-import cz.hodinator.ui.theme.SurfaceDark
-import cz.hodinator.ui.theme.TextPrimary
-import cz.hodinator.ui.theme.TextSecondary
+import cz.hodinator.ui.components.*
+import cz.hodinator.ui.theme.*
 import cz.hodinator.utils.TimeUtils
-import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
-import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
-import kotlinx.datetime.LocalTime
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
-import kotlinx.datetime.plus
-import kotlinx.datetime.toInstant
-import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.*
 
 @Composable fun RecordList(
     records: List<TimeRecord>,
@@ -85,12 +49,10 @@ import kotlinx.datetime.toLocalDateTime
 
     val timeZone = remember { TimeZone.currentSystemDefault() }
     val recordsByDay = remember(records) { records.groupBy { it.startTime.toLocalDateTime(timeZone).date } }
-    // Recomputed whenever records change, so "Dnes"/"Včera" stay correct when the app runs past midnight.
     val today = remember(records) { Clock.System.now().toLocalDateTime(timeZone).date }
 
     LazyColumn(Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(14.dp)) {
         recordsByDay.forEach { (date, dayRecords) ->
-            // Each day is one visual block so it's obvious at a glance which records belong together.
             item(key = date.toString()) {
                 Column(
                     Modifier
@@ -154,10 +116,6 @@ import kotlinx.datetime.toLocalDateTime
     }
 }
 
-/**
- * A record row with inline editing of name, date and start/end time. Changes are saved when a field
- * loses focus (or on Enter); invalid input reverts to the original value.
- */
 @Composable private fun RecordCard(
     record: TimeRecord,
     timeZone: TimeZone,
@@ -246,13 +204,7 @@ import kotlinx.datetime.toLocalDateTime
     }
 }
 
-@Composable private fun RecordAction(
-    icon: ImageVector,
-    description: String,
-    tint: Color,
-    iconSize: Dp,
-    onClick: () -> Unit,
-) {
+@Composable private fun RecordAction(icon: ImageVector, description: String, tint: Color, iconSize: Dp, onClick: () -> Unit) {
     IconButton(onClick = onClick, Modifier.size(28.dp)) {
         Icon(icon, contentDescription = description, Modifier.size(iconSize), tint = tint)
     }

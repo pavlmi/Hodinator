@@ -44,10 +44,10 @@ import cz.hodinator.ui.theme.SurfaceVariantDark
 import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
 
+
 /** Single-line text fields don't strip line breaks from pasted text, so replace them with spaces. */
 fun String.withoutLineBreaks(): String = replace(Regex("[\r\n]+"), " ")
 
-/** Background with the border used by all "cards" in the app. */
 fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.dp)): Modifier =
     clip(shape).background(color).border(1.dp, BorderDark, shape)
 
@@ -89,11 +89,9 @@ fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.d
     }
 }
 
-/** With [showLabel] = false only the icon is shown (used when the window is narrow). */
 @Composable fun ToolbarButton(icon: ImageVector, label: String, onClick: () -> Unit, showLabel: Boolean = true) {
     OutlinedButton(
         onClick = onClick,
-        // An explicit min width overrides Material's 58dp default, so the icon-only variant stays compact.
         modifier = Modifier.widthIn(min = 36.dp),
         shape = RoundedCornerShape(10.dp),
         border = BorderStroke(1.dp, BorderDark),
@@ -117,7 +115,6 @@ fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.d
     unfocusedTextColor = TextPrimary,
 )
 
-/** Common dialog look: a fixed-width card with content laid out in a column. */
 @Composable fun AppDialog(onDismiss: () -> Unit, width: Dp, content: @Composable ColumnScope.() -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -131,15 +128,9 @@ fun Modifier.cardBackground(color: Color, shape: Shape = RoundedCornerShape(14.d
     }
 }
 
-@Composable fun DialogTitle(text: String) {
-    Text(text, style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary))
-}
+@Composable fun DialogTitle(text: String) = Text(text, style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary))
+@Composable fun DialogText(text: String) = Text(text, style = TextStyle(fontSize = 13.sp, color = TextSecondary))
 
-@Composable fun DialogText(text: String) {
-    Text(text, style = TextStyle(fontSize = 13.sp, color = TextSecondary))
-}
-
-/** "Zrušit" + confirm buttons aligned to the end. The dialog is dismissed after confirming. */
 @Composable fun DialogButtons(
     confirmLabel: String,
     confirmColor: Color,

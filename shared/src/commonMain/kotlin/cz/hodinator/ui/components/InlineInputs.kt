@@ -42,6 +42,7 @@ import cz.hodinator.ui.theme.SurfaceVariantDark
 import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
 
+
 /** Text that looks like a plain label but becomes editable on hover / click. */
 @Composable fun InlineEditableText(
     value: String,
@@ -86,7 +87,6 @@ import cz.hodinator.ui.theme.TextSecondary
     }
 }
 
-/** Small input for a time in HH:mm format. */
 @Composable fun TimeInput(value: String, onValueChange: (String) -> Unit, onCommit: () -> Unit) {
     val shape = RoundedCornerShape(6.dp)
     CommitOnBlurTextField(

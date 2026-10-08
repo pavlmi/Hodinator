@@ -34,6 +34,7 @@ import cz.hodinator.ui.theme.PrimaryEmerald
 import cz.hodinator.ui.theme.TextSecondary
 import cz.hodinator.utils.TimeUtils
 
+
 private val TimeFilter.label: String
     get() = when (this) {
         TimeFilter.ALL -> "Vše"
@@ -56,7 +57,6 @@ private val TimeFilter.label: String
 ) {
     SectionCard {
         BoxWithConstraints(Modifier.padding(16.dp)) {
-            // Below this width the toolbar buttons show only icons so the filters keep enough room.
             val compact = maxWidth < 840.dp
 
             Column {
@@ -65,7 +65,6 @@ private val TimeFilter.label: String
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    // Scrolls horizontally instead of wrapping when there still isn't enough room.
                     Row(Modifier.weight(1f).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         TimeFilter.entries.forEach { filter ->
                             SelectablePill(filter.label, selected = filter == currentFilter, onClick = { onFilterSelect(filter) })

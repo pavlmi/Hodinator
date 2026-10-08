@@ -21,7 +21,7 @@ class CsvExportTest {
 
         val csv = CsvExport.monthlySummary(records, 2026, 10, TimeZone.UTC)
 
-        assertEquals("﻿Název úkolu;Celkový čas\r\nBeta;02:00:00\r\nAlfa;01:00:00\r\n", csv)
+        assertEquals("﻿Název úkolu;Čas\r\nBeta;02:00:00\r\nAlfa;01:00:00\r\n", csv)
     }
 
     @Test fun quotesCellsWithSpecialCharacters() {

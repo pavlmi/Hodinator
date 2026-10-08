@@ -3,6 +3,7 @@ package cz.hodinator.utils
 import cz.hodinator.models.TimeRecord
 import kotlinx.datetime.TimeZone
 
+
 /** CSV for Excel with Czech locale: UTF-8 with BOM and semicolon as the separator. */
 object CsvExport {
     private const val SEPARATOR = ';'
@@ -25,7 +26,7 @@ object CsvExport {
 
         return buildString {
             append(BOM)
-            appendRow("Název úkolu", "Celkový čas")
+            appendRow("Název úkolu", "Čas")
             totalsByProject.forEach { (project, seconds) -> appendRow(project, TimeUtils.formatSeconds(seconds)) }
         }
     }

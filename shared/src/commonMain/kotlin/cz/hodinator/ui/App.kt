@@ -45,6 +45,7 @@ import cz.hodinator.ui.theme.SurfaceDark
 import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
 
+
 @Composable fun App(viewModel: TimeTrackerViewModel) {
     MaterialTheme(colorScheme = AppColorScheme) {
         Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -116,7 +117,6 @@ import cz.hodinator.ui.theme.TextSecondary
             )
         }
 
-        // While hiding, state.toast is already null, so keep the last message around for the exit animation.
         var lastToast by remember { mutableStateOf(state.toast) }
         state.toast?.let { lastToast = it }
         AnimatedVisibility(

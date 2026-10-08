@@ -34,9 +34,7 @@ object AppLog {
     private fun write(level: String, message: String) {
         val line = "${Clock.System.now()} $level: $message"
         println(line)
-        try {
-            AppFiles.logFile.apply { parentFile?.mkdirs() }.appendText(line + "\n")
-        } catch (_: Exception) {
-        }
+        try { AppFiles.logFile.apply { parentFile?.mkdirs() }.appendText(line + "\n") }
+        catch (_: Exception) {}
     }
 }

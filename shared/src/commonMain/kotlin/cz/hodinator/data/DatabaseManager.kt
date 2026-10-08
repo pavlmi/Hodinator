@@ -10,19 +10,17 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 
+
 /**
  * Access to the SQLite database of time records. Each call opens its own connection on [Dispatchers.IO].
  * Errors propagate to the caller so they can be shown to the user.
  */
 class DatabaseManager(dbFile: File) {
-
     private val url = "jdbc:sqlite:${dbFile.absolutePath}"
 
     @Volatile private var schemaCreated = false
 
-    init {
-        dbFile.parentFile?.mkdirs()
-    }
+    init { dbFile.parentFile?.mkdirs() }
 
     suspend fun getRecords(): List<TimeRecord> = withConnection { conn ->
         conn.prepareStatement("SELECT id, project_name, duration_seconds, timestamp FROM records ORDER BY timestamp DESC")
@@ -45,7 +43,6 @@ class DatabaseManager(dbFile: File) {
             }
     }
 
-    /** Inserts [record] as a new row; its `id` is ignored. */
     suspend fun insertRecord(record: TimeRecord) = withConnection { conn ->
         conn.prepareStatement("INSERT INTO records (project_name, duration_seconds, timestamp) VALUES (?, ?, ?)")
             .use { stmt ->

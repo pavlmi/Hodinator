@@ -23,6 +23,7 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import kotlin.time.Duration.Companion.seconds
 
+
 class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
     private val _uiState = MutableStateFlow(TimeTrackerState())
     val uiState: StateFlow<TimeTrackerState> = _uiState.asStateFlow()
@@ -30,9 +31,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
     private var timerJob: Job? = null
     private var toastJob: Job? = null
 
-    init {
-        launchDbAction("Nepodařilo se načíst záznamy") { reloadRecords() }
-    }
+    init { launchDbAction("Nepodařilo se načíst záznamy") { reloadRecords() } }
 
     fun onProjectNameChange(newName: String) = _uiState.update { it.copy(projectName = newName) }
 
@@ -48,9 +47,7 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
                 saveRunningTimer()
                 reloadRecords(scrollToTop = true)
             }
-        } else {
-            startTimer(_uiState.value.projectName)
-        }
+        } else startTimer(_uiState.value.projectName)
     }
 
     /** Starts the timer for the record's project. A running timer is saved first. */
@@ -159,14 +156,11 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         }
     }
 
-    /** Runs a database action; on failure logs it and shows [errorMessage] to the user. */
     private fun launchDbAction(errorMessage: String, action: suspend () -> Unit) {
         viewModelScope.launch {
-            try {
-                action()
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
+            try { action() }
+            catch (e: CancellationException) { throw e }
+            catch (e: Exception) {
                 AppLog.error(errorMessage, e)
                 showToast(errorMessage, isError = true)
             }
@@ -193,7 +187,6 @@ data class TimeTrackerState(
 ) {
     val isRunning: Boolean get() = startTime != null
 
-    // Lazy so the filter isn't recomputed more than once per timer tick.
     val filteredRecords: List<TimeRecord> by lazy {
         TimeUtils.filterRecords(
             records = records,

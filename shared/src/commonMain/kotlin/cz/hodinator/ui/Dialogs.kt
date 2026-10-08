@@ -47,8 +47,8 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
-private val LabelStyle = TextStyle(fontSize = 12.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
 
+private val LabelStyle = TextStyle(fontSize = 12.sp, color = TextSecondary, fontWeight = FontWeight.Bold)
 @Composable fun ExportCsvDialog(onDismiss: () -> Unit, onExport: (year: Int, monthNumber: Int) -> Unit) {
     val today = remember { Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date }
     var selectedYear by remember { mutableStateOf(today.year) }

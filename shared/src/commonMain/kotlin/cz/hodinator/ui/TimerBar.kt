@@ -41,6 +41,7 @@ import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
 import cz.hodinator.utils.TimeUtils
 
+
 @Composable fun TimerBar(
     projectName: String,
     elapsedSeconds: Long,
@@ -59,10 +60,8 @@ import cz.hodinator.utils.TimeUtils
             OutlinedTextField(
                 value = projectName,
                 onValueChange = { onProjectNameChange(it.withoutLineBreaks()) },
-                placeholder = {
-                    Text("Na čem právě pracuješ?", color = TextSecondary, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                },
-                modifier = Modifier.weight(1f),
+                Modifier.weight(1f),
+                placeholder = { Text("Na čem právě pracuješ?", color = TextSecondary, fontSize = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 singleLine = true,
                 shape = RoundedCornerShape(10.dp),
                 colors = appTextFieldColors(),
@@ -85,7 +84,7 @@ import cz.hodinator.utils.TimeUtils
 
             Button(
                 onClick = onToggleTimer,
-                modifier = Modifier.height(44.dp),
+                Modifier.height(44.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = accent, contentColor = Color.White),
                 shape = RoundedCornerShape(10.dp),
                 contentPadding = PaddingValues(horizontal = 20.dp),
@@ -93,7 +92,7 @@ import cz.hodinator.utils.TimeUtils
                 Icon(
                     imageVector = if (isRunning) Icons.Rounded.Stop else Icons.Rounded.PlayArrow,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp),
+                    Modifier.size(18.dp),
                 )
                 Spacer(Modifier.width(6.dp))
                 Text(if (isRunning) "STOP" else "START", softWrap = false, style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 14.sp))

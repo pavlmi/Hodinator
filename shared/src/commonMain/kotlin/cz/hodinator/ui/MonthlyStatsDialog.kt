@@ -69,6 +69,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 
+
 private val ChartHeight = 220.dp
 private val YAxisWidth = 36.dp
 private val TooltipWidth = 180.dp
@@ -219,13 +220,12 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().height(ChartHeight)) {
-            // Y axis labels
             Box(Modifier.width(YAxisWidth).fillMaxHeight()) {
                 for (h in 0..axisMaxHours step stepHours) {
                     val fraction = h / axisMaxHours.toFloat()
                     Text(
-                        "$h h",
-                        modifier = Modifier
+                        text = "$h h",
+                        Modifier
                             .align(Alignment.BottomStart)
                             .offset(y = ChartHeight * -fraction + 6.dp),
                         style = TextStyle(color = TextSecondary, fontSize = 10.sp, fontFamily = FontFamily.Monospace),
@@ -257,7 +257,6 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                             else if (hoveredIndex == index) hoveredIndex = null
                         }
 
-                        // The whole column is the hover target, not just the (thin) bar.
                         Box(
                             Modifier
                                 .weight(1f)
@@ -310,7 +309,6 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
             }
         }
 
-        // X axis labels: day of month + short weekday name
         Row(Modifier.fillMaxWidth().padding(start = YAxisWidth, top = 6.dp)) {
             dailyTotals.forEachIndexed { index, (date, _) ->
                 val isToday = date == today
