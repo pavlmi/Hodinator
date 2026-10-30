@@ -32,8 +32,10 @@ import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -42,10 +44,29 @@ import cz.hodinator.ui.theme.PrimaryEmerald
 import cz.hodinator.ui.theme.SurfaceVariantDark
 import cz.hodinator.ui.theme.TextPrimary
 import cz.hodinator.ui.theme.TextSecondary
+import cz.hodinator.utils.TimeUtils
 
 
 /** Single-line text fields don't strip line breaks from pasted text, so replace them with spaces. */
 fun String.withoutLineBreaks(): String = replace(Regex("[\r\n]+"), " ")
+
+/**
+ * [TextFieldValue] state for a String [value], with typed text passed through [format]. When the text is
+ * reformatted or changed from outside, the cursor moves to the end instead of staying in the middle.
+ */
+@Composable fun rememberTextFieldValue(
+    value: String,
+    onValueChange: (String) -> Unit,
+    format: (oldText: String, newText: String) -> String = { _, newText -> newText },
+): Pair<TextFieldValue, (TextFieldValue) -> Unit> {
+    var fieldValue by remember { mutableStateOf(TextFieldValue(value)) }
+    val current = if (fieldValue.text == value) fieldValue else TextFieldValue(value, TextRange(value.length))
+    return current to { typed ->
+        val text = format(current.text, typed.text.withoutLineBreaks())
+        fieldValue = if (text == typed.text) typed else TextFieldValue(text, TextRange(text.length))
+        if (text != current.text) onValueChange(text)
+    }
+}
 
 @Composable fun appTextFieldColors() = OutlinedTextFieldDefaults.colors(
     focusedBorderColor = PrimaryEmerald,
@@ -106,6 +127,7 @@ fun String.withoutLineBreaks(): String = replace(Regex("[\r\n]+"), " ")
         value = value,
         onValueChange = onValueChange,
         onCommit = onCommit,
+        format = TimeUtils::autoFormatTime,
         textStyle = TextStyle(
             fontFamily = FontFamily.Monospace,
             color = TextPrimary,
@@ -132,14 +154,16 @@ fun String.withoutLineBreaks(): String = replace(Regex("[\r\n]+"), " ")
     onCommit: () -> Unit,
     textStyle: TextStyle,
     modifier: Modifier = Modifier,
+    format: (oldText: String, newText: String) -> String = { _, newText -> newText },
     decorationBox: @Composable (isFocused: Boolean, innerTextField: @Composable () -> Unit) -> Unit,
 ) {
     var isFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+    val (fieldValue, onFieldValueChange) = rememberTextFieldValue(value, onValueChange, format)
 
     BasicTextField(
-        value = value,
-        onValueChange = { onValueChange(it.withoutLineBreaks()) },
+        value = fieldValue,
+        onValueChange = onFieldValueChange,
         singleLine = true,
         textStyle = textStyle,
         cursorBrush = SolidColor(PrimaryEmerald),

@@ -158,7 +158,7 @@ import kotlinx.datetime.*
         if (newDuration <= 0) return resetTexts()
 
         val updated = record.copy(projectName = nameText, startTime = newStart, durationSeconds = newDuration)
-        if (updated != record) onUpdate(updated)
+        if (updated != record) onUpdate(updated) else resetTexts()
     }
 
     Row(

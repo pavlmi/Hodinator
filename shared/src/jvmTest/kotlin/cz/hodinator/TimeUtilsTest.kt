@@ -48,7 +48,22 @@ class TimeUtilsTest {
         assertEquals(LocalTime(23, 59), TimeUtils.parseTime("23:59"))
         assertNull(TimeUtils.parseTime("24:00"))
         assertNull(TimeUtils.parseTime("12:60"))
-        assertNull(TimeUtils.parseTime("1200"))
+        assertEquals(LocalTime(8, 0), TimeUtils.parseTime("0800"))
+        assertEquals(LocalTime(8, 30), TimeUtils.parseTime("830"))
+        assertEquals(LocalTime(9, 0), TimeUtils.parseTime("9"))
+        assertEquals(LocalTime(17, 15), TimeUtils.parseTime("17.15"))
+        assertNull(TimeUtils.parseTime("2400"))
+        assertNull(TimeUtils.parseTime("12345"))
+        assertNull(TimeUtils.parseTime(""))
+        assertEquals("08:00", TimeUtils.normalizeTime("0800"))
+        assertEquals("8:7x", TimeUtils.normalizeTime("8:7x"))
+    }
+
+    @Test fun autoFormatsTimeWhileTyping() {
+        assertEquals("08:00", TimeUtils.autoFormatTime("080", "0800"))
+        assertEquals("080", TimeUtils.autoFormatTime("08", "080"))
+        assertEquals("0800", TimeUtils.autoFormatTime("08:00", "0800"))
+        assertEquals("2500", TimeUtils.autoFormatTime("250", "2500"))
     }
 
     @Test fun formatsCzechNames() {

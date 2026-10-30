@@ -17,6 +17,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -28,7 +29,7 @@ import cz.hodinator.ui.components.DialogButtons
 import cz.hodinator.ui.components.DialogTitle
 import cz.hodinator.ui.components.ProjectNameField
 import cz.hodinator.ui.components.appTextFieldColors
-import cz.hodinator.ui.components.withoutLineBreaks
+import cz.hodinator.ui.components.rememberTextFieldValue
 import cz.hodinator.ui.theme.PrimaryEmerald
 import cz.hodinator.ui.theme.StopRed
 import cz.hodinator.ui.theme.TextPrimary
@@ -89,10 +90,11 @@ private val LabelStyle = TextStyle(fontSize = 12.sp, color = TextSecondary, font
 @Composable private fun TimeField(label: String, value: String, isError: Boolean, onValueChange: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(label, style = LabelStyle)
+        val (fieldValue, onFieldValueChange) = rememberTextFieldValue(value, onValueChange, TimeUtils::autoFormatTime)
         OutlinedTextField(
-            value = value,
-            onValueChange = { onValueChange(it.withoutLineBreaks()) },
-            Modifier.width(96.dp),
+            value = fieldValue,
+            onValueChange = onFieldValueChange,
+            Modifier.width(96.dp).onFocusChanged { if (!it.isFocused) onValueChange(TimeUtils.normalizeTime(value)) },
             singleLine = true,
             isError = isError,
             textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 15.sp),

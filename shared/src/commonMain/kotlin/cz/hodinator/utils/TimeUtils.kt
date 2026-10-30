@@ -65,12 +65,29 @@ object TimeUtils {
         return runCatching { LocalDate(year, month, day) }.getOrNull()
     }
 
+    /** Parses "H:mm" or "H.mm", or digits only: "8" (hours), "800" or "0800". Returns `null` for an invalid time. */
     fun parseTime(text: String): LocalTime? {
-        val parts = text.trim().split(":").map { it.trim().toIntOrNull() ?: return null }
-        if (parts.size != 2) return null
-        val (hour, minute) = parts
+        val trimmed = text.trim()
+        val (hour, minute) = if (trimmed.all { it.isDigit() }) {
+            when (trimmed.length) {
+                1, 2 -> trimmed.toInt() to 0
+                3, 4 -> trimmed.dropLast(2).toInt() to trimmed.takeLast(2).toInt()
+                else -> return null
+            }
+        } else {
+            val parts = trimmed.split(':', '.').map { it.trim().toIntOrNull() ?: return null }
+            if (parts.size != 2) return null
+            parts[0] to parts[1]
+        }
         return runCatching { LocalTime(hour, minute) }.getOrNull()
     }
+
+    /** While typing, turns four digits such as "0800" into "08:00". Deleting (e.g. the colon) is left alone. */
+    fun autoFormatTime(oldText: String, newText: String): String =
+        if (newText.length > oldText.length && newText.length == 4 && newText.all { it.isDigit() }) normalizeTime(newText) else newText
+
+    /** Reformats a valid time to "HH:mm", e.g. "0800" to "08:00"; invalid text is returned unchanged. */
+    fun normalizeTime(text: String): String = parseTime(text)?.let(::formatTime) ?: text
 
     /** A record on [date] from [from] to [to], or `null` when the range is empty. */
     fun recordForDay(
