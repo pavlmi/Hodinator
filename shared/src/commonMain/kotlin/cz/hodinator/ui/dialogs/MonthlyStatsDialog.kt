@@ -98,9 +98,10 @@ private const val TOOLTIP_MAX_PROJECTS = 6
     val today = remember { Clock.System.now().toLocalDateTime(timeZone).date }
     var year by remember { mutableStateOf(today.year) }
     var month by remember { mutableStateOf(today.monthNumber) }
-    var showTable by remember { mutableStateOf(false) }
+    var view by remember { mutableStateOf(StatsView.CHART) }
     var addRecordDate by remember { mutableStateOf<LocalDate?>(null) }
 
+    val projectTotals = remember(records, year, month) { TimeUtils.projectTotalsForMonth(records, year, month, timeZone) }
     val projectsByDay = remember(records, year, month) { TimeUtils.projectTotalsByDay(records, year, month, timeZone) }
     val dailyTotals = remember(records, year, month) {
         TimeUtils.dailyTotalsForMonth(records, year, month, timeZone)
@@ -169,28 +170,87 @@ private const val TOOLTIP_MAX_PROJECTS = 6
 
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Odpracované hodiny po dnech",
+                        text = if (view == StatsView.PROJECTS) "Odpracováno podle úkolů" else "Odpracované hodiny po dnech",
                         style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary),
                     )
                     Spacer(Modifier.weight(1f))
-                    ViewToggle("Graf", selected = !showTable) { showTable = false }
-                    Spacer(Modifier.width(6.dp))
-                    ViewToggle("Tabulka", selected = showTable) { showTable = true }
+                    StatsView.entries.forEach {
+                        Spacer(Modifier.width(6.dp))
+                        ViewToggle(it.label, selected = view == it) { view = it }
+                    }
                 }
 
                 val dayActions = DayActions(dayMarks, onDayMarkChange) { addRecordDate = it }
-                if (showTable) DailyTable(dailyTotals, today, dayActions) else DailyBarChart(dailyTotals, projectsByDay, today, dayActions)
+                when (view) {
+                    StatsView.CHART -> DailyBarChart(dailyTotals, projectsByDay, today, dayActions)
+                    StatsView.TABLE -> DailyTable(dailyTotals, today, dayActions)
+                    StatsView.PROJECTS -> ProjectTotalsList(projectTotals, totalSeconds)
+                }
 
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    LegendItem("Víkend", WeekendBackground)
-                    LegendItem("Svátek, dovolená, volno, nemoc", MarkedDayBackground)
-                    Text("Kliknutím na den ho označíš nebo přidáš záznam", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+                if (view != StatsView.PROJECTS) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        LegendItem("Víkend", WeekendBackground)
+                        LegendItem("Svátek, dovolená, volno, nemoc", MarkedDayBackground)
+                        Text("Kliknutím na den ho označíš nebo přidáš záznam", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+                    }
                 }
             }
         }
     }
 
     addRecordDate?.let { date -> AddRecordDialog(date, projectNames, onDismiss = { addRecordDate = null }, onAdd = onAddRecord) }
+}
+
+private enum class StatsView(val label: String) { CHART("Graf"), TABLE("Tabulka"), PROJECTS("Úkoly") }
+
+@Composable private fun ProjectTotalsList(projectTotals: List<Pair<String, Long>>, totalSeconds: Long) {
+    if (projectTotals.isEmpty()) {
+        Box(Modifier.fillMaxWidth().height(ChartHeight), contentAlignment = Alignment.Center) {
+            Text("V tomto měsíci nejsou žádné záznamy", style = TextStyle(color = TextSecondary, fontSize = 13.sp))
+        }
+        return
+    }
+
+    val longest = projectTotals.first().second
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(max = ChartHeight + 30.dp)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        projectTotals.forEach { (name, seconds) ->
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 6.dp, horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text(
+                    name,
+                    Modifier.weight(1f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = TextStyle(color = TextPrimary, fontSize = 13.sp),
+                )
+                Box(Modifier.width(140.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(SurfaceVariantDark)) {
+                    Box(Modifier.fillMaxWidth(seconds.toFloat() / longest).fillMaxHeight().background(PrimaryEmerald))
+                }
+                Text(
+                    TimeUtils.formatHoursMinutes(seconds),
+                    Modifier.width(90.dp),
+                    textAlign = TextAlign.End,
+                    softWrap = false,
+                    style = TextStyle(color = TextPrimary, fontSize = 13.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold),
+                )
+                Text(
+                    "${(seconds * 100.0 / totalSeconds).roundToInt()} %",
+                    Modifier.width(44.dp),
+                    textAlign = TextAlign.End,
+                    softWrap = false,
+                    style = TextStyle(color = TextSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace),
+                )
+            }
+        }
+    }
 }
 
 @Composable private fun StatTile(label: String, value: String, caption: String?, modifier: Modifier = Modifier) {

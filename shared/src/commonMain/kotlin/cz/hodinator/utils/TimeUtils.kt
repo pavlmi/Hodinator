@@ -166,6 +166,14 @@ object TimeUtils {
         date.year == year && date.monthNumber == monthNumber
     }
 
+    /** Total seconds per project in the month, longest first. */
+    fun projectTotalsForMonth(
+        records: List<TimeRecord>,
+        year: Int,
+        monthNumber: Int,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    ): List<Pair<String, Long>> = projectTotals(recordsInMonth(records, year, monthNumber, timeZone))
+
     /** Seconds per project for each day of the month that has records, longest first. A record counts toward the day it starts. */
     fun projectTotalsByDay(
         records: List<TimeRecord>,
@@ -175,11 +183,7 @@ object TimeUtils {
     ): Map<LocalDate, List<Pair<String, Long>>> =
         recordsInMonth(records, year, monthNumber, timeZone)
             .groupBy { it.startTime.toLocalDateTime(timeZone).date }
-            .mapValues { (_, dayRecords) ->
-                dayRecords.groupBy { it.projectName }
-                    .map { (name, projectRecords) -> name to projectRecords.sumOf { it.durationSeconds } }
-                    .sortedByDescending { it.second }
-            }
+            .mapValues { (_, dayRecords) -> projectTotals(dayRecords) }
 
     /** Seconds worked for every day of the month (including days without records). A record counts toward the day it starts. */
     fun dailyTotalsForMonth(
@@ -198,6 +202,11 @@ object TimeUtils {
             .map { it to (totalsByDate[it] ?: 0L) }
             .toList()
     }
+
+    private fun projectTotals(records: List<TimeRecord>): List<Pair<String, Long>> =
+        records.groupBy { it.projectName }
+            .map { (name, projectRecords) -> name to projectRecords.sumOf { it.durationSeconds } }
+            .sortedByDescending { it.second }
 
     private fun LocalDate.isInMonthOf(other: LocalDate) = year == other.year && month == other.month
 }

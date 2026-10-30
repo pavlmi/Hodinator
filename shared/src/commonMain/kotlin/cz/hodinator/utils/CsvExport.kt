@@ -18,12 +18,7 @@ object CsvExport {
         monthNumber: Int,
         timeZone: TimeZone = TimeZone.currentSystemDefault(),
     ): String {
-        val totalsByProject = TimeUtils.recordsInMonth(records, year, monthNumber, timeZone)
-            .groupBy { it.projectName }
-            .mapValues { (_, projectRecords) -> projectRecords.sumOf { it.durationSeconds } }
-            .entries
-            .sortedByDescending { it.value }
-
+        val totalsByProject = TimeUtils.projectTotalsForMonth(records, year, monthNumber, timeZone)
         return buildString {
             append(BOM)
             appendRow("Název úkolu", "Čas")

@@ -124,6 +124,7 @@ class TimeUtilsTest {
             ),
             TimeUtils.projectTotalsByDay(records, 2026, 2, utc),
         )
+        assertEquals(listOf("Alfa" to 4800L, "Beta" to 3600L), TimeUtils.projectTotalsForMonth(records, 2026, 2, utc))
     }
 
     @Test fun computesDailyTotalsForWholeMonth() {
