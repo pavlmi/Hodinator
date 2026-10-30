@@ -28,12 +28,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -83,8 +85,10 @@ private val TooltipHeight = 46.dp
 
 @Composable fun MonthlyStatsDialog(
     records: List<TimeRecord>,
+    projectNames: List<String>,
     dayMarks: Map<LocalDate, DayMark>,
     onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+    onAddRecord: (TimeRecord) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val timeZone = remember { TimeZone.currentSystemDefault() }
@@ -92,6 +96,7 @@ private val TooltipHeight = 46.dp
     var year by remember { mutableStateOf(today.year) }
     var month by remember { mutableStateOf(today.monthNumber) }
     var showTable by remember { mutableStateOf(false) }
+    var addRecordDate by remember { mutableStateOf<LocalDate?>(null) }
 
     val dailyTotals = remember(records, year, month) {
         TimeUtils.dailyTotalsForMonth(records, year, month, timeZone)
@@ -169,17 +174,19 @@ private val TooltipHeight = 46.dp
                     ViewToggle("Tabulka", selected = showTable) { showTable = true }
                 }
 
-                if (showTable) DailyTable(dailyTotals, today, dayMarks, onDayMarkChange)
-                else DailyBarChart(dailyTotals, today, dayMarks, onDayMarkChange)
+                val dayActions = DayActions(dayMarks, onDayMarkChange) { addRecordDate = it }
+                if (showTable) DailyTable(dailyTotals, today, dayActions) else DailyBarChart(dailyTotals, today, dayActions)
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     LegendItem("Víkend", WeekendBackground)
                     LegendItem("Svátek, dovolená, volno, nemoc", MarkedDayBackground)
-                    Text("Kliknutím na den ho označíš", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+                    Text("Kliknutím na den ho označíš nebo přidáš záznam", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
                 }
             }
         }
     }
+
+    addRecordDate?.let { date -> AddRecordDialog(date, projectNames, onDismiss = { addRecordDate = null }, onAdd = onAddRecord) }
 }
 
 @Composable private fun StatTile(label: String, value: String, caption: String?, modifier: Modifier = Modifier) {
@@ -235,9 +242,9 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
 @Composable private fun DailyBarChart(
     dailyTotals: List<Pair<LocalDate, Long>>,
     today: LocalDate,
-    dayMarks: Map<LocalDate, DayMark>,
-    onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+    dayActions: DayActions,
 ) {
+    val dayMarks = dayActions.dayMarks
     val (axisMaxHours, stepHours) = remember(dailyTotals) { niceAxis(dailyTotals.maxOfOrNull { it.second } ?: 0L) }
     val axisMaxSeconds = axisMaxHours * 3600f
     var hoveredIndex by remember(dailyTotals) { mutableStateOf<Int?>(null) }
@@ -302,7 +309,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                                         .background(if (isHovered) PrimaryEmerald else PrimaryEmerald.copy(alpha = 0.85f)),
                                 )
                             }
-                            if (menuDate == date) DayMarkMenu(date, dayMarks[date], onDayMarkChange) { menuDate = null }
+                            if (menuDate == date) DayMenu(date, dayActions) { menuDate = null }
                         }
                     }
                 }
@@ -366,9 +373,9 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
 @Composable private fun DailyTable(
     dailyTotals: List<Pair<LocalDate, Long>>,
     today: LocalDate,
-    dayMarks: Map<LocalDate, DayMark>,
-    onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+    dayActions: DayActions,
 ) {
+    val dayMarks = dayActions.dayMarks
     var menuDate by remember { mutableStateOf<LocalDate?>(null) }
     Column(
         Modifier
@@ -407,7 +414,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                 )
                 Box(Modifier.weight(1f)) {
                     Text(mark?.label ?: "", style = TextStyle(color = DayMarkAmber, fontSize = 12.sp))
-                    if (menuDate == date) DayMarkMenu(date, mark, onDayMarkChange) { menuDate = null }
+                    if (menuDate == date) DayMenu(date, dayActions) { menuDate = null }
                 }
                 Text(
                     if (seconds > 0) TimeUtils.formatHoursMinutes(seconds) else "–",
@@ -439,9 +446,17 @@ private fun dayBackground(date: LocalDate, dayMarks: Map<LocalDate, DayMark>) = 
     }
 }
 
-@Composable private fun DayMarkMenu(date: LocalDate, current: DayMark?, onDayMarkChange: (LocalDate, DayMark?) -> Unit, onDismiss: () -> Unit) {
+/** What can be done with a day after clicking it in the chart or the table. */
+private class DayActions(
+    val dayMarks: Map<LocalDate, DayMark>,
+    val onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+    val onAddRecord: (LocalDate) -> Unit,
+)
+
+@Composable private fun DayMenu(date: LocalDate, actions: DayActions, onDismiss: () -> Unit) {
+    val current = actions.dayMarks[date]
     fun select(mark: DayMark?) {
-        if (mark != current) onDayMarkChange(date, mark)
+        if (mark != current) actions.onDayMarkChange(date, mark)
         onDismiss()
     }
 
@@ -451,6 +466,15 @@ private fun dayBackground(date: LocalDate, dayMarks: Map<LocalDate, DayMark>) = 
             Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             style = TextStyle(color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold),
         )
+        DropdownMenuItem(
+            text = { Text("Přidat záznam…", color = TextPrimary, fontSize = 13.sp) },
+            onClick = {
+                actions.onAddRecord(date)
+                onDismiss()
+            },
+            leadingIcon = { Icon(Icons.Rounded.Add, contentDescription = null, tint = PrimaryEmerald) },
+        )
+        HorizontalDivider(color = BorderDark)
         DayMark.entries.forEach { mark ->
             DropdownMenuItem(
                 text = { Text(mark.label, color = TextPrimary, fontSize = 13.sp) },

@@ -7,11 +7,13 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.DayOfWeek
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
 import kotlinx.datetime.plus
+import kotlinx.datetime.toInstant
 import kotlinx.datetime.toLocalDateTime
 
 
@@ -68,6 +70,19 @@ object TimeUtils {
         if (parts.size != 2) return null
         val (hour, minute) = parts
         return runCatching { LocalTime(hour, minute) }.getOrNull()
+    }
+
+    /** A record on [date] from [from] to [to], or `null` when the range is empty. */
+    fun recordForDay(
+        projectName: String,
+        date: LocalDate,
+        from: LocalTime,
+        to: LocalTime,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    ): TimeRecord? {
+        val start = LocalDateTime(date, from).toInstant(timeZone)
+        val durationSeconds = (LocalDateTime(date, to).toInstant(timeZone) - start).inWholeSeconds
+        return if (durationSeconds > 0) TimeRecord(projectName = projectName, durationSeconds = durationSeconds, startTime = start) else null
     }
 
     fun filterRecords(

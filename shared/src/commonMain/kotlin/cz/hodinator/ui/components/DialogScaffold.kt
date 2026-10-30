@@ -57,6 +57,7 @@ import cz.hodinator.ui.theme.TextSecondary
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     confirmIcon: ImageVector? = null,
+    confirmEnabled: Boolean = true,
 ) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.End)) {
         Button(
@@ -70,6 +71,7 @@ import cz.hodinator.ui.theme.TextSecondary
                 onConfirm()
                 onDismiss()
             },
+            enabled = confirmEnabled,
             colors = ButtonDefaults.buttonColors(containerColor = confirmColor, contentColor = Color.White),
             shape = RoundedCornerShape(8.dp),
         ) {

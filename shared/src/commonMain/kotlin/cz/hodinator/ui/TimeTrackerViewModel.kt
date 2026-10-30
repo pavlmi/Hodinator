@@ -97,6 +97,12 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         showToast("Kopie záznamu byla vytvořena")
     }
 
+    fun addRecord(record: TimeRecord) = launchDbAction("Záznam se nepodařilo přidat") {
+        db.insertRecord(record)
+        reloadRecords()
+        showToast("Záznam byl přidán")
+    }
+
     fun updateRecord(record: TimeRecord) = launchDbAction("Změnu záznamu se nepodařilo uložit") {
         db.updateRecord(record)
         reloadRecords()

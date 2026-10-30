@@ -19,6 +19,12 @@ class TimeUtilsTest {
     private fun record(isoStart: String, seconds: Long = 3600, name: String = "Projekt") =
         TimeRecord(projectName = name, durationSeconds = seconds, startTime = Instant.parse(isoStart))
 
+    @Test fun createsRecordForDay() {
+        val record = TimeUtils.recordForDay("Práce", LocalDate(2026, 10, 30), LocalTime(8, 0), LocalTime(17, 0), utc)
+        assertEquals(TimeRecord(projectName = "Práce", durationSeconds = 9 * 3600, startTime = Instant.parse("2026-10-30T08:00:00Z")), record)
+        assertNull(TimeUtils.recordForDay("Práce", LocalDate(2026, 10, 30), LocalTime(17, 0), LocalTime(8, 0), utc))
+    }
+
     @Test fun formatsDurations() {
         assertEquals("00:00:00", TimeUtils.formatSeconds(0))
         assertEquals("27:46:40", TimeUtils.formatSeconds(100_000))
