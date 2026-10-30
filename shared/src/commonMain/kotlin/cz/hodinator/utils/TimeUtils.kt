@@ -166,6 +166,21 @@ object TimeUtils {
         date.year == year && date.monthNumber == monthNumber
     }
 
+    /** Seconds per project for each day of the month that has records, longest first. A record counts toward the day it starts. */
+    fun projectTotalsByDay(
+        records: List<TimeRecord>,
+        year: Int,
+        monthNumber: Int,
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+    ): Map<LocalDate, List<Pair<String, Long>>> =
+        recordsInMonth(records, year, monthNumber, timeZone)
+            .groupBy { it.startTime.toLocalDateTime(timeZone).date }
+            .mapValues { (_, dayRecords) ->
+                dayRecords.groupBy { it.projectName }
+                    .map { (name, projectRecords) -> name to projectRecords.sumOf { it.durationSeconds } }
+                    .sortedByDescending { it.second }
+            }
+
     /** Seconds worked for every day of the month (including days without records). A record counts toward the day it starts. */
     fun dailyTotalsForMonth(
         records: List<TimeRecord>,

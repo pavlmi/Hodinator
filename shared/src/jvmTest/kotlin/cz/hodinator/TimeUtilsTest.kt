@@ -109,6 +109,23 @@ class TimeUtilsTest {
         assertEquals(range(LocalDate(2026, 3, 2), LocalDate(2026, 3, 4)), days(TimeFilter.CUSTOM, from = LocalDate(2026, 3, 2), to = LocalDate(2026, 12, 31)))
     }
 
+    @Test fun sumsProjectsPerDay() {
+        val records = listOf(
+            record("2026-02-03T08:00:00Z", 1800, "Alfa"),
+            record("2026-02-03T09:00:00Z", 3600, "Beta"),
+            record("2026-02-03T11:00:00Z", 2400, "Alfa"),
+            record("2026-02-04T08:00:00Z", 600, "Alfa"),
+            record("2026-03-01T08:00:00Z", 600, "Gama"),
+        )
+        assertEquals(
+            mapOf(
+                LocalDate(2026, 2, 3) to listOf("Alfa" to 4200L, "Beta" to 3600L),
+                LocalDate(2026, 2, 4) to listOf("Alfa" to 600L),
+            ),
+            TimeUtils.projectTotalsByDay(records, 2026, 2, utc),
+        )
+    }
+
     @Test fun computesDailyTotalsForWholeMonth() {
         val records = listOf(
             record("2026-02-03T08:00:00Z", 3600),

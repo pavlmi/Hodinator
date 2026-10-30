@@ -51,11 +51,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -72,6 +74,7 @@ import cz.hodinator.ui.theme.TextSecondary
 import cz.hodinator.ui.theme.TooltipBackground
 import cz.hodinator.utils.TimeUtils
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 import kotlinx.datetime.Clock
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -80,8 +83,8 @@ import kotlinx.datetime.toLocalDateTime
 
 private val ChartHeight = 220.dp
 private val YAxisWidth = 36.dp
-private val TooltipWidth = 180.dp
-private val TooltipHeight = 46.dp
+private val TooltipWidth = 260.dp
+private const val TOOLTIP_MAX_PROJECTS = 6
 
 @Composable fun MonthlyStatsDialog(
     records: List<TimeRecord>,
@@ -98,6 +101,7 @@ private val TooltipHeight = 46.dp
     var showTable by remember { mutableStateOf(false) }
     var addRecordDate by remember { mutableStateOf<LocalDate?>(null) }
 
+    val projectsByDay = remember(records, year, month) { TimeUtils.projectTotalsByDay(records, year, month, timeZone) }
     val dailyTotals = remember(records, year, month) {
         TimeUtils.dailyTotalsForMonth(records, year, month, timeZone)
     }
@@ -175,7 +179,7 @@ private val TooltipHeight = 46.dp
                 }
 
                 val dayActions = DayActions(dayMarks, onDayMarkChange) { addRecordDate = it }
-                if (showTable) DailyTable(dailyTotals, today, dayActions) else DailyBarChart(dailyTotals, today, dayActions)
+                if (showTable) DailyTable(dailyTotals, today, dayActions) else DailyBarChart(dailyTotals, projectsByDay, today, dayActions)
 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     LegendItem("Víkend", WeekendBackground)
@@ -241,6 +245,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
 
 @Composable private fun DailyBarChart(
     dailyTotals: List<Pair<LocalDate, Long>>,
+    projectsByDay: Map<LocalDate, List<Pair<String, Long>>>,
     today: LocalDate,
     dayActions: DayActions,
 ) {
@@ -318,17 +323,22 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                     val (date, seconds) = dailyTotals[index]
                     val barTop = ChartHeight * (1f - (seconds / axisMaxSeconds).coerceIn(0f, 1f))
                     val x = (columnWidth * (index + 0.5f) - TooltipWidth / 2).coerceIn(0.dp, maxWidth - TooltipWidth)
-                    val y = (barTop - TooltipHeight - 6.dp).coerceAtLeast(0.dp)
+                    val projects = projectsByDay[date].orEmpty()
 
                     Column(
                         Modifier
-                            .offset(x = x, y = y)
+                            // The height depends on the number of projects, so the tooltip is placed above the bar once measured.
+                            .layout { measurable, constraints ->
+                                val placeable = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0, maxHeight = Constraints.Infinity))
+                                layout(placeable.width, placeable.height) {
+                                    val y = (barTop.toPx() - placeable.height - 6.dp.toPx()).coerceAtLeast(0f)
+                                    placeable.place(x.roundToPx(), y.roundToInt())
+                                }
+                            }
                             .width(TooltipWidth)
-                            .height(TooltipHeight)
                             .clip(RoundedCornerShape(8.dp))
                             .background(TooltipBackground)
                             .padding(horizontal = 10.dp, vertical = 6.dp),
-                        verticalArrangement = Arrangement.Center,
                     ) {
                         Text(
                             TimeUtils.dayWithDate(date),
@@ -340,6 +350,33 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                                 .ifEmpty { "Bez záznamu" },
                             style = TextStyle(color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold),
                         )
+                        if (projects.isNotEmpty()) {
+                            Spacer(Modifier.height(6.dp))
+                            projects.take(TOOLTIP_MAX_PROJECTS).forEach { (name, projectSeconds) ->
+                                Row(Modifier.padding(vertical = 1.dp), verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        name,
+                                        Modifier.weight(1f),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        style = TextStyle(color = TextPrimary.copy(alpha = 0.85f), fontSize = 12.sp),
+                                    )
+                                    Text(
+                                        TimeUtils.formatHoursMinutes(projectSeconds),
+                                        Modifier.padding(start = 10.dp),
+                                        softWrap = false,
+                                        style = TextStyle(color = TextSecondary, fontSize = 12.sp, fontFamily = FontFamily.Monospace),
+                                    )
+                                }
+                            }
+                            if (projects.size > TOOLTIP_MAX_PROJECTS) {
+                                val more = projects.size - TOOLTIP_MAX_PROJECTS
+                                Text(
+                                    "+ $more ${if (more < 5) "další" else "dalších"}",
+                                    style = TextStyle(color = TextSecondary, fontSize = 11.sp),
+                                )
+                            }
+                        }
                     }
                 }
             }
