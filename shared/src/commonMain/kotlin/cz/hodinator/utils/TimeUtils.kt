@@ -127,6 +127,34 @@ object TimeUtils {
         }
     }
 
+    /**
+     * Days listed for [filter], newest first: the whole range of the filter up to today (or the latest record),
+     * so days without records are listed too. An open range starts at the earliest record.
+     */
+    fun daysToShow(
+        records: List<TimeRecord>,
+        filter: TimeFilter,
+        now: Instant = Clock.System.now(),
+        timeZone: TimeZone = TimeZone.currentSystemDefault(),
+        fromDate: LocalDate? = null,
+        toDate: LocalDate? = null,
+    ): List<LocalDate> {
+        val today = now.toLocalDateTime(timeZone).date
+        val recordDates = records.map { it.startTime.toLocalDateTime(timeZone).date }
+        val earliest = recordDates.minOrNull() ?: today
+        val latest = maxOf(today, recordDates.maxOrNull() ?: today)
+        val lastMonthStart = LocalDate(today.year, today.month, 1).minus(1, DateTimeUnit.MONTH)
+
+        val (start, end) = when (filter) {
+            TimeFilter.ALL -> earliest to latest
+            TimeFilter.TODAY -> today to today
+            TimeFilter.THIS_MONTH -> LocalDate(today.year, today.month, 1) to latest
+            TimeFilter.LAST_MONTH -> lastMonthStart to lastMonthStart.plus(1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY)
+            TimeFilter.CUSTOM -> (fromDate ?: earliest) to minOf(toDate ?: latest, latest)
+        }
+        return generateSequence(end) { it.minus(1, DateTimeUnit.DAY) }.takeWhile { it >= start }.toList()
+    }
+
     /** Records starting in the given month. */
     fun recordsInMonth(
         records: List<TimeRecord>,

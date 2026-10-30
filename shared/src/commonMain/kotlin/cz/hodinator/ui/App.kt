@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cz.hodinator.models.TimeRecord
 import cz.hodinator.ui.components.ToastNotification
+import cz.hodinator.ui.dialogs.AddRecordDialog
 import cz.hodinator.ui.dialogs.DeleteConfirmDialog
 import cz.hodinator.ui.dialogs.ExportCsvDialog
 import cz.hodinator.ui.dialogs.MonthlyStatsDialog
@@ -30,6 +31,7 @@ import cz.hodinator.ui.screen.FilterBar
 import cz.hodinator.ui.screen.RecordList
 import cz.hodinator.ui.screen.TimerBar
 import cz.hodinator.ui.theme.AppColorScheme
+import kotlinx.datetime.LocalDate
 
 
 @Composable fun App(viewModel: TimeTrackerViewModel) {
@@ -45,6 +47,7 @@ import cz.hodinator.ui.theme.AppColorScheme
     var showExportDialog by remember { mutableStateOf(false) }
     var showStatsDialog by remember { mutableStateOf(false) }
     var recordToDelete by remember { mutableStateOf<TimeRecord?>(null) }
+    var addRecordDate by remember { mutableStateOf<LocalDate?>(null) }
 
     Box(Modifier.fillMaxSize()) {
         Column(
@@ -74,11 +77,14 @@ import cz.hodinator.ui.theme.AppColorScheme
 
             RecordList(
                 records = state.filteredRecords,
+                days = state.visibleDays,
+                dayMarks = state.dayMarks,
                 scrollToTopRequest = state.scrollToTopRequest,
                 onStartAgain = viewModel::startAgain,
                 onCopy = viewModel::copyRecord,
                 onDelete = { recordToDelete = it },
                 onUpdate = viewModel::updateRecord,
+                onAddRecord = { addRecordDate = it },
             )
         }
 
@@ -98,6 +104,10 @@ import cz.hodinator.ui.theme.AppColorScheme
                 onAddRecord = viewModel::addRecord,
                 onDismiss = { showStatsDialog = false },
             )
+        }
+
+        addRecordDate?.let { date ->
+            AddRecordDialog(date, state.projectNames, onDismiss = { addRecordDate = null }, onAdd = viewModel::addRecord)
         }
 
         recordToDelete?.let { record ->

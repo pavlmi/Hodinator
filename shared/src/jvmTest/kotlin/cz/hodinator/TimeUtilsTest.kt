@@ -5,10 +5,12 @@ import cz.hodinator.models.TimeFilter
 import cz.hodinator.models.TimeRecord
 import cz.hodinator.models.normalizeProjectName
 import cz.hodinator.utils.TimeUtils
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
@@ -92,6 +94,19 @@ class TimeUtilsTest {
             filter(TimeFilter.CUSTOM, LocalDate(2025, 12, 1), LocalDate(2026, 1, 10)),
         )
         assertEquals(all, filter(TimeFilter.CUSTOM))
+    }
+
+    @Test fun listsDaysWithoutRecords() {
+        val now = Instant.parse("2026-03-04T12:00:00Z")
+        fun days(f: TimeFilter, records: List<TimeRecord> = emptyList(), from: LocalDate? = null, to: LocalDate? = null) =
+            TimeUtils.daysToShow(records, f, now, utc, from, to)
+        fun range(from: LocalDate, to: LocalDate) = generateSequence(to) { it.minus(1, DateTimeUnit.DAY) }.takeWhile { it >= from }.toList()
+
+        assertEquals(listOf(LocalDate(2026, 3, 4)), days(TimeFilter.TODAY))
+        assertEquals(range(LocalDate(2026, 3, 1), LocalDate(2026, 3, 4)), days(TimeFilter.THIS_MONTH))
+        assertEquals(range(LocalDate(2026, 2, 1), LocalDate(2026, 2, 28)), days(TimeFilter.LAST_MONTH))
+        assertEquals(range(LocalDate(2026, 2, 27), LocalDate(2026, 3, 4)), days(TimeFilter.ALL, listOf(record("2026-02-27T08:00:00Z"))))
+        assertEquals(range(LocalDate(2026, 3, 2), LocalDate(2026, 3, 4)), days(TimeFilter.CUSTOM, from = LocalDate(2026, 3, 2), to = LocalDate(2026, 12, 31)))
     }
 
     @Test fun computesDailyTotalsForWholeMonth() {

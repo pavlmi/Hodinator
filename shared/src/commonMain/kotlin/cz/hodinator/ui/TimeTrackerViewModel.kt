@@ -222,6 +222,15 @@ data class TimeTrackerState(
         )
     }
 
+    val visibleDays: List<LocalDate> by lazy {
+        TimeUtils.daysToShow(
+            records = filteredRecords,
+            filter = currentFilter,
+            fromDate = TimeUtils.parseDate(customFromText),
+            toDate = TimeUtils.parseDate(customToText),
+        )
+    }
+
     val totalSeconds: Long by lazy { filteredRecords.sumOf { it.durationSeconds } }
 
     val projectNames: List<String> by lazy { ProjectSuggestions.projectNames(records) }

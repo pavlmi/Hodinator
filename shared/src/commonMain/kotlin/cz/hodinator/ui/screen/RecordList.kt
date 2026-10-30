@@ -1,8 +1,13 @@
 package cz.hodinator.ui.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -14,12 +19,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
+import cz.hodinator.models.DayMark
 import cz.hodinator.models.NO_PROJECT_NAME
 import cz.hodinator.models.TimeRecord
 import cz.hodinator.ui.components.*
@@ -29,18 +36,21 @@ import kotlinx.datetime.*
 
 @Composable fun RecordList(
     records: List<TimeRecord>,
+    days: List<LocalDate>,
+    dayMarks: Map<LocalDate, DayMark>,
     scrollToTopRequest: Int,
     onStartAgain: (TimeRecord) -> Unit,
     onCopy: (TimeRecord) -> Unit,
     onDelete: (TimeRecord) -> Unit,
     onUpdate: (TimeRecord) -> Unit,
+    onAddRecord: (LocalDate) -> Unit,
 ) {
     val listState = rememberLazyListState()
     LaunchedEffect(scrollToTopRequest) {
         if (scrollToTopRequest > 0) listState.animateScrollToItem(0)
     }
 
-    if (records.isEmpty()) {
+    if (days.isEmpty()) {
         Box(Modifier.fillMaxSize().cardBackground(SurfaceDark), contentAlignment = Alignment.Center) {
             Text("Žádné záznamy k zobrazení", color = TextSecondary, fontSize = 14.sp)
         }
@@ -51,17 +61,21 @@ import kotlinx.datetime.*
     val recordsByDay = remember(records) { records.groupBy { it.startTime.toLocalDateTime(timeZone).date } }
     val today = remember(records) { Clock.System.now().toLocalDateTime(timeZone).date }
 
-    LazyColumn(Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        recordsByDay.forEach { (date, dayRecords) ->
-            item(key = date.toString()) {
+    LazyColumn(Modifier.fillMaxSize(), state = listState, verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        items(days, key = { it.toString() }) { date ->
+            val dayRecords = recordsByDay[date].orEmpty()
+            val style = DayStyle.of(date, dayMarks[date])
+            if (dayRecords.isEmpty()) {
+                EmptyDay(date, today, style, dayMarks[date], onAddRecord = { onAddRecord(date) })
+            } else {
                 Column(
                     Modifier
                         .fillMaxWidth()
-                        .cardBackground(DayGroupBackground)
+                        .cardBackground(style.background)
                         .padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 10.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    DayHeader(date, today, dayTotalSeconds = dayRecords.sumOf { it.durationSeconds })
+                    DayHeader(date, today, style, dayMarks[date], dayTotalSeconds = dayRecords.sumOf { it.durationSeconds })
 
                     dayRecords.forEach { record ->
                         key(record.id) {
@@ -81,26 +95,85 @@ import kotlinx.datetime.*
     }
 }
 
-@Composable private fun DayHeader(date: LocalDate, today: LocalDate, dayTotalSeconds: Long) {
-    val title = when (date) {
-        today -> "Dnes – ${TimeUtils.dayWithDate(date)}"
-        today.minus(1, DateTimeUnit.DAY) -> "Včera – ${TimeUtils.dayWithDate(date)}"
-        else -> TimeUtils.dayWithDate(date)
-    }
+/** Weekends and marked days (holiday, vacation…) are tinted, so they stand out and separate the weeks. */
+private enum class DayStyle(val background: Color, val accent: Color) {
+    WORKDAY(DayGroupBackground, PrimaryEmerald),
+    WEEKEND(WeekendBackground, WeekendBlue),
+    MARKED(DayMarkAmber.copy(alpha = 0.08f).compositeOver(DayGroupBackground), DayMarkAmber);
 
+    companion object {
+        fun of(date: LocalDate, mark: DayMark?) = when {
+            mark != null -> MARKED
+            TimeUtils.isWeekend(date) -> WEEKEND
+            else -> WORKDAY
+        }
+    }
+}
+
+private fun dayTitle(date: LocalDate, today: LocalDate) = when (date) {
+    today -> "Dnes – ${TimeUtils.dayWithDate(date)}"
+    today.minus(1, DateTimeUnit.DAY) -> "Včera – ${TimeUtils.dayWithDate(date)}"
+    else -> TimeUtils.dayWithDate(date)
+}
+
+@Composable private fun EmptyDay(date: LocalDate, today: LocalDate, style: DayStyle, mark: DayMark?, onAddRecord: () -> Unit) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isHovered by interactionSource.collectIsHoveredAsState()
+    // Weekends and marked days aren't expected to have records, so they're plain text with the link shown on hover only.
+    val isWorkday = style == DayStyle.WORKDAY
+
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .then(if (isWorkday) Modifier.cardBackground(style.background) else Modifier)
+            .hoverable(interactionSource)
+            .padding(horizontal = 14.dp, vertical = if (isWorkday) 8.dp else 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Box(Modifier.size(6.dp).clip(CircleShape).background(style.accent.copy(alpha = if (isWorkday) 0.6f else 0.4f)))
+            Text(
+                dayTitle(date, today),
+                Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = TextStyle(fontSize = 12.sp, color = if (isWorkday) TextSecondary else style.accent.copy(alpha = 0.6f)),
+            )
+            mark?.let { Text("· ${it.label}", softWrap = false, style = TextStyle(fontSize = 12.sp, color = DayMarkAmber.copy(alpha = 0.7f))) }
+        }
+        Text(
+            "+ přidat záznam",
+            Modifier.clip(RoundedCornerShape(6.dp)).clickable(onClick = onAddRecord).padding(horizontal = 6.dp, vertical = 2.dp),
+            softWrap = false,
+            style = TextStyle(
+                fontSize = 12.sp,
+                color = when {
+                    isHovered -> PrimaryEmerald
+                    isWorkday -> TextSecondary.copy(alpha = 0.5f)
+                    else -> Color.Transparent
+                },
+            ),
+        )
+    }
+}
+
+@Composable private fun DayHeader(date: LocalDate, today: LocalDate, style: DayStyle, mark: DayMark?, dayTotalSeconds: Long) {
     Row(
         Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 2.dp, start = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.size(6.dp).clip(CircleShape).background(PrimaryEmerald))
+            Box(Modifier.size(6.dp).clip(CircleShape).background(style.accent))
             Text(
-                title,
+                dayTitle(date, today),
+                Modifier.weight(1f, fill = false),
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 style = TextStyle(fontWeight = FontWeight.Bold, fontSize = 13.sp, color = TextPrimary.copy(alpha = 0.8f)),
             )
+            mark?.let { Text("· ${it.label}", softWrap = false, style = TextStyle(fontSize = 13.sp, color = DayMarkAmber)) }
         }
 
         Text(

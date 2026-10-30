@@ -6,6 +6,8 @@ import androidx.compose.ui.graphics.Color
 val BackgroundDark = Color(0xFF0F1115)
 val SurfaceDark = Color(0xFF171A21)
 val DayGroupBackground = Color(0xFF13161C)
+val WeekendBackground = Color(0xFF181D2B)
+val WeekendBlue = Color(0xFF7C93C9)
 val SurfaceVariantDark = Color(0xFF20242F)
 val TooltipBackground = Color(0xFF0B0D11)
 val BorderDark = Color(0xFF2D323E)
