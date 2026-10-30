@@ -8,6 +8,7 @@ import cz.hodinator.models.TimeFilter
 import cz.hodinator.models.TimeRecord
 import cz.hodinator.ui.dialogs.chooseCsvSaveFile
 import cz.hodinator.utils.CsvExport
+import cz.hodinator.utils.ProjectSuggestions
 import cz.hodinator.utils.TimeUtils
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
@@ -198,4 +199,6 @@ data class TimeTrackerState(
     }
 
     val totalSeconds: Long by lazy { filteredRecords.sumOf { it.durationSeconds } }
+
+    val projectNames: List<String> by lazy { ProjectSuggestions.projectNames(records) }
 }

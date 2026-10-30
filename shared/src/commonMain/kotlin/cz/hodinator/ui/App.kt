@@ -53,6 +53,7 @@ import cz.hodinator.ui.theme.AppColorScheme
         ) {
             TimerBar(
                 projectName = state.projectName,
+                projectNames = state.projectNames,
                 elapsedSeconds = state.elapsedSeconds,
                 isRunning = state.isRunning,
                 onProjectNameChange = viewModel::onProjectNameChange,
