@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import cz.hodinator.data.AppLog
 import cz.hodinator.data.DatabaseManager
+import cz.hodinator.models.DayMark
 import cz.hodinator.models.TimeFilter
 import cz.hodinator.models.TimeRecord
 import cz.hodinator.ui.dialogs.chooseCsvSaveFile
@@ -23,6 +24,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -33,7 +35,12 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
     private var timerJob: Job? = null
     private var toastJob: Job? = null
 
-    init { launchDbAction("Nepodařilo se načíst záznamy") { reloadRecords() } }
+    init {
+        launchDbAction("Nepodařilo se načíst záznamy") {
+            reloadRecords()
+            reloadDayMarks()
+        }
+    }
 
     fun onProjectNameChange(newName: String) = _uiState.update { it.copy(projectName = newName) }
 
@@ -101,6 +108,11 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         showToast("Záznam byl smazán")
     }
 
+    fun setDayMark(date: LocalDate, mark: DayMark?) = launchDbAction("Označení dne se nepodařilo uložit") {
+        db.setDayMark(date, mark)
+        reloadDayMarks()
+    }
+
     fun exportMonthlyCsv(year: Int, monthNumber: Int) {
         val file = chooseCsvSaveFile(
             title = "Uložit CSV měsíční přehled",
@@ -149,6 +161,11 @@ class TimeTrackerViewModel(private val db: DatabaseManager) : ViewModel() {
         }
     }
 
+    private suspend fun reloadDayMarks() {
+        val dayMarks = db.getDayMarks()
+        _uiState.update { it.copy(dayMarks = dayMarks) }
+    }
+
     private fun showToast(message: String, isError: Boolean = false) {
         toastJob?.cancel()
         _uiState.update { it.copy(toast = Toast(message, isError)) }
@@ -174,6 +191,7 @@ data class Toast(val message: String, val isError: Boolean = false)
 
 data class TimeTrackerState(
     val records: List<TimeRecord> = emptyList(),
+    val dayMarks: Map<LocalDate, DayMark> = emptyMap(),
     val currentFilter: TimeFilter = TimeFilter.ALL,
     val customFromText: String = "",
     val customToText: String = "",

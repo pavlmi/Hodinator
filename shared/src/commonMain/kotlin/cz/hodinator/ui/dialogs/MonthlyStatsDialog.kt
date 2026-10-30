@@ -3,6 +3,7 @@ package cz.hodinator.ui.dialogs
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -27,9 +28,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ChevronLeft
 import androidx.compose.material.icons.rounded.ChevronRight
 import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
@@ -54,8 +58,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import cz.hodinator.models.DayMark
 import cz.hodinator.models.TimeRecord
 import cz.hodinator.ui.theme.BorderDark
+import cz.hodinator.ui.theme.DayMarkAmber
 import cz.hodinator.ui.theme.PrimaryEmerald
 import cz.hodinator.ui.theme.SurfaceDark
 import cz.hodinator.ui.theme.SurfaceVariantDark
@@ -75,7 +81,12 @@ private val YAxisWidth = 36.dp
 private val TooltipWidth = 180.dp
 private val TooltipHeight = 46.dp
 
-@Composable fun MonthlyStatsDialog(records: List<TimeRecord>, onDismiss: () -> Unit) {
+@Composable fun MonthlyStatsDialog(
+    records: List<TimeRecord>,
+    dayMarks: Map<LocalDate, DayMark>,
+    onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+    onDismiss: () -> Unit,
+) {
     val timeZone = remember { TimeZone.currentSystemDefault() }
     val today = remember { Clock.System.now().toLocalDateTime(timeZone).date }
     var year by remember { mutableStateOf(today.year) }
@@ -87,6 +98,7 @@ private val TooltipHeight = 46.dp
     }
     val totalSeconds = dailyTotals.sumOf { it.second }
     val workedDays = dailyTotals.count { it.second > 0 }
+    val workingDays = dailyTotals.count { (date, _) -> !TimeUtils.isWeekend(date) && date !in dayMarks }
     val longestDay = dailyTotals.maxByOrNull { it.second }?.takeIf { it.second > 0 }
 
     fun shiftMonth(delta: Int) {
@@ -131,7 +143,7 @@ private val TooltipHeight = 46.dp
 
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     StatTile("Odpracováno celkem", TimeUtils.formatHoursMinutes(totalSeconds), null, Modifier.weight(1f))
-                    StatTile("Odpracované dny", workedDays.toString(), "z ${dailyTotals.size} dnů v měsíci", Modifier.weight(1f))
+                    StatTile("Odpracované dny", workedDays.toString(), if (workingDays == 1) "z 1 pracovního dne" else "z $workingDays pracovních dnů", Modifier.weight(1f))
                     StatTile(
                         "Průměr na odpracovaný den",
                         if (workedDays > 0) TimeUtils.formatHoursMinutes(totalSeconds / workedDays) else "–",
@@ -157,7 +169,14 @@ private val TooltipHeight = 46.dp
                     ViewToggle("Tabulka", selected = showTable) { showTable = true }
                 }
 
-                if (showTable) DailyTable(dailyTotals, today) else DailyBarChart(dailyTotals, today)
+                if (showTable) DailyTable(dailyTotals, today, dayMarks, onDayMarkChange)
+                else DailyBarChart(dailyTotals, today, dayMarks, onDayMarkChange)
+
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                    LegendItem("Víkend", WeekendBackground)
+                    LegendItem("Svátek, dovolená, volno, nemoc", MarkedDayBackground)
+                    Text("Kliknutím na den ho označíš", style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+                }
             }
         }
     }
@@ -213,10 +232,16 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
     return axisMax to step
 }
 
-@Composable private fun DailyBarChart(dailyTotals: List<Pair<LocalDate, Long>>, today: LocalDate) {
+@Composable private fun DailyBarChart(
+    dailyTotals: List<Pair<LocalDate, Long>>,
+    today: LocalDate,
+    dayMarks: Map<LocalDate, DayMark>,
+    onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+) {
     val (axisMaxHours, stepHours) = remember(dailyTotals) { niceAxis(dailyTotals.maxOfOrNull { it.second } ?: 0L) }
     val axisMaxSeconds = axisMaxHours * 3600f
     var hoveredIndex by remember(dailyTotals) { mutableStateOf<Int?>(null) }
+    var menuDate by remember { mutableStateOf<LocalDate?>(null) }
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().height(ChartHeight)) {
@@ -249,7 +274,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                 }
 
                 Row(Modifier.fillMaxSize()) {
-                    dailyTotals.forEachIndexed { index, (_, seconds) ->
+                    dailyTotals.forEachIndexed { index, (date, seconds) ->
                         val interactionSource = remember { MutableInteractionSource() }
                         val isHovered by interactionSource.collectIsHoveredAsState()
                         LaunchedEffect(isHovered) {
@@ -262,7 +287,8 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                                 .weight(1f)
                                 .fillMaxHeight()
                                 .hoverable(interactionSource)
-                                .background(if (isHovered) SurfaceVariantDark.copy(alpha = 0.6f) else Color.Transparent),
+                                .background(if (isHovered) SurfaceVariantDark.copy(alpha = 0.6f) else dayBackground(date, dayMarks))
+                                .clickable { menuDate = date },
                             contentAlignment = Alignment.BottomCenter,
                         ) {
                             val fraction = (seconds / axisMaxSeconds).coerceIn(0f, 1f)
@@ -276,6 +302,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                                         .background(if (isHovered) PrimaryEmerald else PrimaryEmerald.copy(alpha = 0.85f)),
                                 )
                             }
+                            if (menuDate == date) DayMarkMenu(date, dayMarks[date], onDayMarkChange) { menuDate = null }
                         }
                     }
                 }
@@ -301,7 +328,9 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                             style = TextStyle(color = TextSecondary, fontSize = 11.sp),
                         )
                         Text(
-                            if (seconds > 0) TimeUtils.formatHoursMinutes(seconds) else "Bez záznamu",
+                            listOfNotNull(TimeUtils.formatHoursMinutes(seconds).takeIf { seconds > 0 }, dayMarks[date]?.label)
+                                .joinToString(" · ")
+                                .ifEmpty { "Bez záznamu" },
                             style = TextStyle(color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold),
                         )
                     }
@@ -315,6 +344,7 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                 val color = when {
                     isToday -> PrimaryEmerald
                     hoveredIndex == index -> TextPrimary
+                    date in dayMarks -> DayMarkAmber
                     TimeUtils.isWeekend(date) -> TextSecondary.copy(alpha = 0.55f)
                     else -> TextSecondary
                 }
@@ -333,7 +363,13 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
     }
 }
 
-@Composable private fun DailyTable(dailyTotals: List<Pair<LocalDate, Long>>, today: LocalDate) {
+@Composable private fun DailyTable(
+    dailyTotals: List<Pair<LocalDate, Long>>,
+    today: LocalDate,
+    dayMarks: Map<LocalDate, DayMark>,
+    onDayMarkChange: (LocalDate, DayMark?) -> Unit,
+) {
+    var menuDate by remember { mutableStateOf<LocalDate?>(null) }
     Column(
         Modifier
             .fillMaxWidth()
@@ -342,9 +378,13 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
     ) {
         dailyTotals.forEach { (date, seconds) ->
             val weekend = TimeUtils.isWeekend(date)
+            val mark = dayMarks[date]
             Row(
                 Modifier
                     .fillMaxWidth()
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(dayBackground(date, dayMarks))
+                    .clickable { menuDate = date }
                     .padding(vertical = 5.dp, horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -359,12 +399,16 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                 )
                 Text(
                     TimeUtils.dayOfWeekName(date),
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.width(96.dp),
                     style = TextStyle(
                         color = if (weekend) TextSecondary else TextPrimary,
                         fontSize = 12.sp,
                     ),
                 )
+                Box(Modifier.weight(1f)) {
+                    Text(mark?.label ?: "", style = TextStyle(color = DayMarkAmber, fontSize = 12.sp))
+                    if (menuDate == date) DayMarkMenu(date, mark, onDayMarkChange) { menuDate = null }
+                }
                 Text(
                     if (seconds > 0) TimeUtils.formatHoursMinutes(seconds) else "–",
                     style = TextStyle(
@@ -375,6 +419,51 @@ private fun niceAxis(maxSeconds: Long): Pair<Int, Int> {
                     ),
                 )
             }
+        }
+    }
+}
+
+private val WeekendBackground = SurfaceVariantDark.copy(alpha = 0.4f)
+private val MarkedDayBackground = DayMarkAmber.copy(alpha = 0.12f)
+
+private fun dayBackground(date: LocalDate, dayMarks: Map<LocalDate, DayMark>) = when {
+    date in dayMarks -> MarkedDayBackground
+    TimeUtils.isWeekend(date) -> WeekendBackground
+    else -> Color.Transparent
+}
+
+@Composable private fun LegendItem(label: String, color: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        Box(Modifier.size(10.dp).clip(RoundedCornerShape(2.dp)).background(color).border(1.dp, BorderDark, RoundedCornerShape(2.dp)))
+        Text(label, style = TextStyle(color = TextSecondary, fontSize = 11.sp))
+    }
+}
+
+@Composable private fun DayMarkMenu(date: LocalDate, current: DayMark?, onDayMarkChange: (LocalDate, DayMark?) -> Unit, onDismiss: () -> Unit) {
+    fun select(mark: DayMark?) {
+        if (mark != current) onDayMarkChange(date, mark)
+        onDismiss()
+    }
+
+    DropdownMenu(expanded = true, onDismissRequest = onDismiss, containerColor = SurfaceVariantDark) {
+        Text(
+            TimeUtils.dayWithDate(date),
+            Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            style = TextStyle(color = TextSecondary, fontSize = 11.sp, fontWeight = FontWeight.Bold),
+        )
+        DayMark.entries.forEach { mark ->
+            DropdownMenuItem(
+                text = { Text(mark.label, color = TextPrimary, fontSize = 13.sp) },
+                onClick = { select(mark) },
+                leadingIcon = { Icon(Icons.Rounded.Check, contentDescription = null, tint = if (mark == current) DayMarkAmber else Color.Transparent) },
+            )
+        }
+        if (current != null) {
+            DropdownMenuItem(
+                text = { Text("Zrušit označení", color = TextSecondary, fontSize = 13.sp) },
+                onClick = { select(null) },
+                leadingIcon = { Icon(Icons.Rounded.Close, contentDescription = null, tint = TextSecondary) },
+            )
         }
     }
 }

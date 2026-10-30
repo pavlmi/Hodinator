@@ -22,4 +22,7 @@ data class TimeRecord(
     val endTime: Instant get() = startTime + durationSeconds.seconds
 }
 
+/** Marks a day without regular work in the monthly overview. */
+enum class DayMark(val label: String) { HOLIDAY("Svátek"), VACATION("Dovolená"), DAY_OFF("Volno"), SICK_LEAVE("Nemoc") }
+
 enum class TimeFilter { ALL, TODAY, THIS_MONTH, LAST_MONTH, CUSTOM }

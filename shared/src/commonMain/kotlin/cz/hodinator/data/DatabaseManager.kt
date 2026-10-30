@@ -1,10 +1,12 @@
 package cz.hodinator.data
 
+import cz.hodinator.models.DayMark
 import cz.hodinator.models.normalizeProjectName
 import cz.hodinator.models.TimeRecord
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import java.io.File
 import java.sql.Connection
 import java.sql.DriverManager
@@ -70,6 +72,30 @@ class DatabaseManager(dbFile: File) {
         Unit
     }
 
+    suspend fun getDayMarks(): Map<LocalDate, DayMark> = withConnection { conn ->
+        conn.prepareStatement("SELECT date, mark FROM day_marks").use { stmt ->
+            stmt.executeQuery().use { rs ->
+                buildMap {
+                    while (rs.next()) {
+                        val mark = DayMark.entries.find { it.name == rs.getString("mark") } ?: continue
+                        put(LocalDate.parse(rs.getString("date")), mark)
+                    }
+                }
+            }
+        }
+    }
+
+    /** Marks the day, or removes its mark when [mark] is null. */
+    suspend fun setDayMark(date: LocalDate, mark: DayMark?) = withConnection { conn ->
+        val sql = if (mark == null) "DELETE FROM day_marks WHERE date = ?" else "INSERT OR REPLACE INTO day_marks (date, mark) VALUES (?, ?)"
+        conn.prepareStatement(sql).use { stmt ->
+            stmt.setString(1, date.toString())
+            mark?.let { stmt.setString(2, it.name) }
+            stmt.executeUpdate()
+        }
+        Unit
+    }
+
     private fun PreparedStatement.bindRecord(record: TimeRecord) {
         setString(1, normalizeProjectName(record.projectName))
         setLong(2, record.durationSeconds)
@@ -79,7 +105,7 @@ class DatabaseManager(dbFile: File) {
     private suspend fun <T> withConnection(block: (Connection) -> T): T = withContext(Dispatchers.IO) {
         DriverManager.getConnection(url).use { conn ->
             if (!schemaCreated) {
-                conn.createStatement().use { it.execute(CREATE_TABLE_SQL) }
+                conn.createStatement().use { stmt -> SCHEMA_SQL.forEach { stmt.execute(it) } }
                 schemaCreated = true
             }
             block(conn)
@@ -87,14 +113,17 @@ class DatabaseManager(dbFile: File) {
     }
 
     private companion object {
-        // The `timestamp` column holds the record's start as ISO-8601 text.
-        val CREATE_TABLE_SQL = """
-            CREATE TABLE IF NOT EXISTS records (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                project_name TEXT NOT NULL,
-                duration_seconds INTEGER NOT NULL,
-                timestamp TEXT NOT NULL
-            )
-        """.trimIndent()
+        // `records.timestamp` holds the record's start as ISO-8601 text, `day_marks.mark` a DayMark name.
+        val SCHEMA_SQL = listOf(
+            """
+                CREATE TABLE IF NOT EXISTS records (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    project_name TEXT NOT NULL,
+                    duration_seconds INTEGER NOT NULL,
+                    timestamp TEXT NOT NULL
+                )
+            """.trimIndent(),
+            "CREATE TABLE IF NOT EXISTS day_marks (date TEXT PRIMARY KEY, mark TEXT NOT NULL)",
+        )
     }
 }

@@ -12,6 +12,7 @@ val BorderDark = Color(0xFF2D323E)
 
 val PrimaryEmerald = Color(0xFF10B981)
 val StopRed = Color(0xFFEF4444)
+val DayMarkAmber = Color(0xFFF59E0B)
 
 val TextPrimary = Color(0xFFF9FAFB)
 val TextSecondary = Color(0xFF9CA3AF)

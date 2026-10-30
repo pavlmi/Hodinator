@@ -1,10 +1,12 @@
 package cz.hodinator
 
 import cz.hodinator.data.DatabaseManager
+import cz.hodinator.models.DayMark
 import cz.hodinator.models.NO_PROJECT_NAME
 import cz.hodinator.models.TimeRecord
 import kotlinx.coroutines.runBlocking
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
 import java.io.File
 import java.sql.DriverManager
 import kotlin.io.path.createTempDirectory
@@ -19,6 +21,18 @@ class DatabaseManagerTest {
 
     @AfterTest fun cleanUp() {
         tempDir.deleteRecursively()
+    }
+
+    @Test fun setsReplacesAndRemovesDayMarks() = runBlocking {
+        val christmas = LocalDate(2026, 12, 24)
+        val friday = LocalDate(2026, 12, 18)
+        db.setDayMark(christmas, DayMark.DAY_OFF)
+        db.setDayMark(christmas, DayMark.HOLIDAY)
+        db.setDayMark(friday, DayMark.VACATION)
+        assertEquals(mapOf(christmas to DayMark.HOLIDAY, friday to DayMark.VACATION), db.getDayMarks())
+
+        db.setDayMark(friday, null)
+        assertEquals(mapOf(christmas to DayMark.HOLIDAY), db.getDayMarks())
     }
 
     @Test fun insertsUpdatesAndDeletesRecords() = runBlocking {

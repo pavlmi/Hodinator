@@ -92,6 +92,8 @@ import cz.hodinator.ui.theme.AppColorScheme
         if (showStatsDialog) {
             MonthlyStatsDialog(
                 records = state.records,
+                dayMarks = state.dayMarks,
+                onDayMarkChange = viewModel::setDayMark,
                 onDismiss = { showStatsDialog = false },
             )
         }
